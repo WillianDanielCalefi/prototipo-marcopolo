@@ -1,0 +1,1873 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Marcopolo (2017–2025) — Diagnóstico e Simulador de Capital de Giro</title>
+  <style>
+    :root {
+      --bg: #f4f6f9;
+      --surface: #ffffff;
+      --surface-alt: #f8fafc;
+      --text: #0f172a;
+      --muted: #475569;
+      --border: #e2e8f0;
+      --primary: #1d4ed8;
+      --primary-dark: #1e3a8a;
+      --primary-light: #eff6ff;
+      --success: #047857;
+      --success-bg: #ecfdf5;
+      --warning: #b45309;
+      --warning-bg: #fffbeb;
+      --danger: #b91c1c;
+      --danger-bg: #fef2f2;
+      --radius: 12px;
+      --shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      padding-bottom: 48px;
+    }
+
+    header {
+      background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
+      color: #fff;
+      padding: 24px 20px;
+      box-shadow: var(--shadow);
+    }
+
+    .container {
+      max-width: 1160px;
+      margin: 0 auto;
+      padding: 0 16px;
+    }
+
+    .header-top {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .badge {
+      display: inline-block;
+      background: rgba(255, 255, 255, 0.16);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+
+    h1 {
+      font-size: 24px;
+      margin-top: 8px;
+      font-weight: 700;
+    }
+
+    .subtitle {
+      color: #cbd5e1;
+      font-size: 14px;
+      margin-top: 4px;
+      max-width: 820px;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+
+    .tab-btn {
+      background: rgba(255, 255, 255, 0.1);
+      color: #e2e8f0;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 10px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      transition: all 0.15s ease;
+    }
+
+    .tab-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .tab-btn.active {
+      background: #ffffff;
+      color: var(--primary-dark);
+      border-color: #ffffff;
+    }
+
+    .tab-panel {
+      display: none;
+      margin-top: 20px;
+    }
+
+    .tab-panel.active {
+      display: block;
+    }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+      box-shadow: var(--shadow);
+      margin-bottom: 16px;
+    }
+
+    .kpi-label {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .kpi-value {
+      font-size: 24px;
+      font-weight: 700;
+      margin-top: 6px;
+      color: var(--text);
+    }
+
+    .kpi-sub {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    h2 {
+      font-size: 18px;
+      margin-bottom: 10px;
+      color: var(--text);
+    }
+
+    h3 {
+      font-size: 15px;
+      margin-bottom: 8px;
+      color: var(--text);
+    }
+
+    p.desc {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+
+    ul.card-list {
+      padding-left: 18px;
+      font-size: 13px;
+      color: var(--text);
+      margin-bottom: 10px;
+    }
+
+    ul.card-list li {
+      margin-bottom: 4px;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      background: var(--surface);
+    }
+
+    th, td {
+      padding: 10px 12px;
+      text-align: right;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    th:first-child, td:first-child,
+    th:nth-child(2), td:nth-child(2) {
+      text-align: left;
+    }
+
+    th {
+      background: var(--surface-alt);
+      color: var(--muted);
+      font-weight: 700;
+      font-size: 12px;
+      text-transform: uppercase;
+    }
+
+    tr:hover td {
+      background: #f8fafc;
+    }
+
+    .phase-pill {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .p-pre { background: #e0f2fe; color: #0369a1; }
+    .p-pan { background: #fef3c7; color: #92400e; }
+    .p-pos { background: #dcfce7; color: #166534; }
+
+    /* Bar chart */
+    .bar-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .bar-row {
+      display: grid;
+      grid-template-columns: 48px 1fr 96px;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+    }
+
+    .bar-track {
+      height: 22px;
+      background: #f1f5f9;
+      border-radius: 6px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .bar-fill {
+      height: 100%;
+      background: var(--primary);
+      border-radius: 6px;
+      transition: width 0.25s ease;
+    }
+
+    .bar-fill.peak {
+      background: var(--danger);
+    }
+
+    .bar-fill.best {
+      background: var(--success);
+    }
+
+    /* Simulator */
+    .sim-layout {
+      display: grid;
+      grid-template-columns: 1fr 1.25fr;
+      gap: 18px;
+    }
+
+    .sim-layout > * {
+      min-width: 0;
+    }
+
+    @media (max-width: 860px) {
+      .sim-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .control-group {
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px dashed var(--border);
+    }
+
+    .control-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--primary);
+      cursor: pointer;
+    }
+
+    select, button.btn {
+      font-family: inherit;
+      font-size: 13px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    select {
+      padding: 8px 10px;
+      border: 1px solid #cbd5e1;
+      background: #fff;
+      color: var(--text);
+      width: 100%;
+      margin-top: 4px;
+    }
+
+    select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.12);
+    }
+
+    input[type="number"] {
+      width: 100%;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      background: #fff;
+      color: var(--text);
+      padding: 8px 10px;
+      font: inherit;
+    }
+
+    .problem-adjustment-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .problem-adjustment-grid label {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--muted);
+      min-width: 0;
+      white-space: normal;
+    }
+
+    .problem-adjustment-grid input {
+      margin-top: 5px;
+    }
+
+    #estrategias .grid-2 {
+      align-items: stretch;
+    }
+
+    #estrategias .grid-2 > .card {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    #estrategias .grid-2 > .card > .callout {
+      margin-top: auto;
+    }
+
+    .problem-option {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 11px 12px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--surface-alt);
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: border-color 0.15s ease, background 0.15s ease;
+    }
+
+    .problem-option:hover {
+      border-color: #93c5fd;
+      background: #f1f5f9;
+    }
+
+    .problem-option input[type="radio"] {
+      margin-top: 3px;
+      accent-color: var(--primary);
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .problem-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+      display: block;
+    }
+
+    .problem-sub {
+      font-size: 12px;
+      color: var(--muted);
+      display: block;
+      margin-top: 2px;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 92px;
+      resize: vertical;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 10px;
+      font: inherit;
+      color: var(--text);
+      background: #fff;
+    }
+
+    textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.12);
+    }
+
+    .btn {
+      padding: 9px 14px;
+      border: 1px solid transparent;
+      font-weight: 600;
+      transition: all 0.15s ease;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-dark);
+    }
+
+    .btn-outline {
+      background: #fff;
+      color: var(--text);
+      border-color: #cbd5e1;
+    }
+
+    .btn-outline:hover {
+      background: var(--surface-alt);
+    }
+
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .sim-metrics {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .metric-box {
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+    }
+
+    .metric-box .label {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .metric-box .val {
+      font-size: 19px;
+      font-weight: 700;
+      margin-top: 4px;
+    }
+
+    .metric-box .delta {
+      font-size: 12px;
+      margin-top: 2px;
+      font-weight: 600;
+    }
+
+    .pos { color: var(--success); }
+    .neg { color: var(--danger); }
+    .warn { color: var(--warning); }
+
+    .callout {
+      padding: 14px;
+      border-radius: 10px;
+      font-size: 13px;
+      margin-top: 12px;
+      border-left: 4px solid var(--primary);
+      background: var(--primary-light);
+    }
+
+    .callout.warn-box {
+      background: var(--warning-bg);
+      border-left-color: var(--warning);
+    }
+
+    .callout.ok-box {
+      background: var(--success-bg);
+      border-left-color: var(--success);
+    }
+
+    .tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+
+    .focus-tag {
+      background: #e2e8f0;
+      color: #0f172a;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 9px;
+      border-radius: 999px;
+    }
+
+    .rec-list {
+      padding-left: 18px;
+      font-size: 13px;
+      margin-top: 8px;
+      margin-bottom: 10px;
+    }
+
+    .rec-list li {
+      margin-bottom: 6px;
+    }
+
+    /* Challenge mode */
+    .decision-card {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+      margin-bottom: 12px;
+      background: var(--surface-alt);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .decision-card input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--primary);
+      cursor: pointer;
+    }
+
+    .footer-note {
+      margin-top: 24px;
+      font-size: 12px;
+      color: var(--muted);
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <div class="header-top">
+        <span class="badge">Administração Financeira de Curto Prazo • Marcopolo (2017–2025)</span>
+        <span class="badge">Base: Segmento Industrial (R$ milhões / 360 dias) • Dados Reais do Excel</span>
+      </div>
+      <h1>Capital de Giro, Ciclos e Caixa Mínimo da Marcopolo</h1>
+      <p class="subtitle">
+        Protótipo interativo alinhado à planilha <em>Marcopolo_base_calculos_2017_2025.xlsx</em> (segmento industrial em R$ milhões, base 360 dias, com indicadores consolidados de aging e estoques).
+      </p>
+      <div class="tabs" role="tablist">
+        <button class="tab-btn active" data-tab="diagnostico">1. Diagnóstico (2017–2025)</button>
+        <button class="tab-btn" data-tab="simulador">2. Simulador de Capital de Giro</button>
+        <button class="tab-btn" data-tab="desafio">3. Desafio CFO (por ano)</button>
+        <button class="tab-btn" data-tab="conceitos">4. Conceitos e Indicadores</button>
+        <button class="tab-btn" data-tab="estrategias">5. Estratégias de Gestão</button>
+        <button class="tab-btn" data-tab="comparativo">6. Comparativo e Conclusão</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- ABA 1: DIAGNÓSTICO -->
+    <section id="diagnostico" class="tab-panel active">
+      <div class="kpi-grid">
+        <div class="card">
+          <div class="kpi-label">Ciclo Financeiro Médio</div>
+          <div class="kpi-value" id="kpiCycleAvg">88,5d → 113,9d</div>
+          <div class="kpi-sub" id="kpiCycleSub">Pré-pandemia vs. Pós-pandemia (pico de 131,4d em 2022)</div>
+        </div>
+        <div class="card">
+          <div class="kpi-label">NCG ÷ Receita Líquida</div>
+          <div class="kpi-value" id="kpiNcgRev">21,5% → 14,4%</div>
+          <div class="kpi-sub" id="kpiNcgRevSub">De R$ 611,4 mi (2017) a R$ 1.265,8 mi (2025)</div>
+        </div>
+        <div class="card">
+          <div class="kpi-label">Saldo de Tesouraria (ST)</div>
+          <div class="kpi-value" id="kpiSt2025">R$ 1.385,1 mi</div>
+          <div class="kpi-sub" id="kpiStSub">Em 2025 (vs. R$ 469,3 mi em 2017; CGL de R$ 2.650,8 mi)</div>
+        </div>
+        <div class="card">
+          <div class="kpi-label">Conversão Cx.Op ÷ Lucro (2022)</div>
+          <div class="kpi-value">0,01x (1,2%)</div>
+          <div class="kpi-sub">Cx. op. de R$ 4,9 mi vs. lucro ind. de R$ 421,4 mi</div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h2>Evolução do Ciclo Financeiro (dias)</h2>
+          <p class="desc">Série do segmento industrial (360 dias). Menor ciclo em 2019 (63,8 dias) e pico em 2022 (131,4 dias).</p>
+          <div id="cycleChart" class="bar-list"></div>
+        </div>
+
+        <div class="card">
+          <h2>Principais Achados da Série (Excel)</h2>
+          <p class="desc">Síntese do segmento industrial separando o Banco Moneo; aging e composição de estoques referem-se ao consolidado.</p>
+          <div class="callout ok-box">
+            <strong>Estoque vs. Recebimento:</strong> O PMRV caiu da média pré-pandemia de 65,6 dias para 51,4 dias no pós-pandemia (40,8 dias em 2025), enquanto o PMRE subiu de 66,7 dias para 105,4 dias (96,8 dias em 2025).
+          </div>
+          <div class="callout warn-box">
+            <strong>Pressão de giro em 2022:</strong> O ciclo financeiro atingiu 131,4 dias, a NCG saltou para R$ 1.244,1 mi e a folga de caixa (Caixa real − Caixa mínimo) ficou negativa em R$ 660,8 mi, comprimindo o caixa operacional a R$ 4,9 mi.
+          </div>
+          <div class="callout">
+            <strong>Caixa mínimo e folga em 2025:</strong> Em 5 dos 9 anos (2018, 2020, 2022, 2023 e 2024) o caixa real ficou abaixo do caixa mínimo do modelo; em 2025 o caixa real atingiu R$ 2.179,2 mi (folga de +R$ 56,8 mi e ST de R$ 1.385,1 mi).
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Série Histórica Completa — Segmento Industrial (2017–2025)</h2>
+        <p class="desc">Valores em R$ milhões (saldos finais, base 360 dias), extraídos diretamente da planilha. "% Vencido" e "% MP Estoque" são dados consolidados da nota explicativa.</p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Período</th>
+                <th>Fase</th>
+                <th>PMRV</th>
+                <th>PMRE</th>
+                <th>PMPC</th>
+                <th>Ciclo Fin.</th>
+                <th>NCG</th>
+                <th>ST</th>
+                <th>CGL</th>
+                <th>Cx. Mín.</th>
+                <th>Folga Cx.</th>
+                <th>Cx.Op/Lucro</th>
+                <th>% Vencido</th>
+              </tr>
+            </thead>
+            <tbody id="historyBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ABA 2: SIMULADOR -->
+    <section id="simulador" class="tab-panel">
+      <div class="sim-layout">
+        <div class="card">
+          <h2>Parâmetros de Simulação</h2>
+          <p class="desc">Escolha um ano-base da planilha e ajuste os prazos médios ou desembolsos para simular NCG, Saldo de Tesouraria e Caixa Mínimo.</p>
+
+          <div class="control-group">
+            <label for="baseYear" class="kpi-label">Ano-Base da Simulação</label>
+            <select id="baseYear"></select>
+          </div>
+
+          <div class="control-group">
+            <div class="control-header">
+              <span>PMRE — Prazo Médio de Estocagem (dias)</span>
+              <span id="pmreVal"></span>
+            </div>
+            <input type="range" id="pmreSlider" min="20" max="160" step="0.5" />
+          </div>
+
+          <div class="control-group">
+            <div class="control-header">
+              <span>PMRV — Prazo Médio de Recebimento (dias)</span>
+              <span id="pmrvVal"></span>
+            </div>
+            <input type="range" id="pmrvSlider" min="15" max="120" step="0.5" />
+          </div>
+
+          <div class="control-group">
+            <div class="control-header">
+              <span>PMPC — Prazo Médio de Pagamento (dias)</span>
+              <span id="pmpcVal"></span>
+            </div>
+            <input type="range" id="pmpcSlider" min="10" max="100" step="0.5" />
+          </div>
+
+          <div class="control-group">
+            <div class="control-header">
+              <span>Variação nos Desembolsos Previstos (%)</span>
+              <span id="disbVal"></span>
+            </div>
+            <input type="range" id="disbSlider" min="-30" max="30" step="1" />
+          </div>
+
+          <div class="btn-row">
+            <button type="button" class="btn btn-outline" id="resetSimBtn">Restaurar Ano-Base</button>
+            <button type="button" class="btn btn-primary" id="presetPreBtn">Cenário: PMRE Média Pré (66,7d)</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Impacto Calculado (Base Real do Excel)</h2>
+          <p class="desc" id="simBaseContext">Compara o cenário simulado contra os dados reais do ano selecionado (mantendo CGL e demais linhas operacionais constantes).</p>
+
+          <div class="sim-metrics">
+            <div class="metric-box">
+              <div class="label">Novo Ciclo Financeiro</div>
+              <div class="val" id="simCycle">—</div>
+              <div class="delta" id="simCycleDelta">—</div>
+            </div>
+            <div class="metric-box">
+              <div class="label">NCG Simulada</div>
+              <div class="val" id="simNcg">—</div>
+              <div class="delta" id="simNcgDelta">—</div>
+            </div>
+            <div class="metric-box">
+              <div class="label">Saldo de Tesouraria Simulado</div>
+              <div class="val" id="simSt">—</div>
+              <div class="delta" id="simStDelta">—</div>
+            </div>
+            <div class="metric-box">
+              <div class="label">Caixa Mínimo Operacional</div>
+              <div class="val" id="simMinCash">—</div>
+              <div class="delta" id="simMinCashDelta">—</div>
+            </div>
+          </div>
+
+          <div id="simInterpretation" class="callout"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ABA 3: DESAFIO CFO (DINAMICO POR ANO) -->
+    <section id="desafio" class="tab-panel">
+      <div class="grid-2">
+        <div class="card">
+          <h2 id="challengeTitle">Missão CFO</h2>
+          <div class="control-group">
+            <label for="challengeYear" class="kpi-label">Ano do desafio</label>
+            <select id="challengeYear"></select>
+          </div>
+          <p class="desc" id="challengeContext"></p>
+          <div id="challengeOptions"></div>
+        </div>
+
+        <div class="card">
+          <h2 id="challengeScoreTitle">Placar da Decisão</h2>
+          <p class="desc">Veja como suas escolhas alteram o caixa operacional estimado e o ciclo financeiro do ano selecionado.</p>
+
+          <div class="sim-metrics">
+            <div class="metric-box">
+              <div class="label">Caixa Operacional Projetado</div>
+              <div class="val" id="chalCash">—</div>
+              <div class="delta" id="chalCashGain">+R$ 0,0 mi de alívio</div>
+            </div>
+            <div class="metric-box">
+              <div class="label">Ciclo Financeiro Resultante</div>
+              <div class="val" id="chalCycle">—</div>
+              <div class="delta" id="chalRiskLabel">Risco operacional: Baixo</div>
+            </div>
+          </div>
+
+          <div id="chalFeedback" class="callout warn-box">
+            Selecione uma ou mais ações à esquerda para simular a resposta da administração em 2022.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ABA 4: CONCEITOS E INDICADORES -->
+    <section id="conceitos" class="tab-panel">
+      <div class="card">
+        <h2>Capital de Giro: por que ele importa?</h2>
+        <p>Capital de giro corresponde aos recursos que sustentam o funcionamento cotidiano da empresa. Na indústria, esses recursos passam por etapas como compra de materiais, armazenamento, produção, venda, faturamento e recebimento. A gestão dos prazos é importante para evitar que o crescimento das operações aumente a necessidade de financiamento.</p>
+        <div class="callout"><strong>Ideia central:</strong> lucro não significa, necessariamente, dinheiro disponível. Em 2022, por exemplo, a Marcopolo apurou R$ 421,4 mi de lucro líquido industrial, mas gerou apenas R$ 4,9 mi de caixa líquido das atividades operacionais.</div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <h2>Indicadores de prazo (360 dias)</h2>
+          <h3>PMRV — Prazo Médio de Recebimento de Vendas</h3>
+          <p class="desc"><code>360 × Clientes (circ. + não circ.) ÷ Receita líquida</code>. Estima o tempo médio para transformar vendas em recebimentos.</p>
+          <h3>PMRE — Prazo Médio de Renovação dos Estoques</h3>
+          <p class="desc"><code>360 × Estoques ÷ (−CPV)</code>. Indica o tempo médio que os itens permanecem em estoque.</p>
+          <h3>PMPC — Prazo Médio de Pagamento de Compras</h3>
+          <p class="desc"><code>360 × Fornecedores ÷ Compras</code>, onde <code>Compras = (−CPV) − Estoque inicial + Estoque final</code>.</p>
+        </div>
+        <div class="card">
+          <h2>Indicadores de estrutura e caixa mínimo</h2>
+          <h3>NCG = ACO − PCO</h3>
+          <p class="desc">ACO = Clientes + Estoques + Outras contas a receber. PCO = Fornecedores + Outras contas a pagar − Dividendos − Arrendamento.</p>
+          <h3>ST = ACF − PCF (Saldo de Tesouraria)</h3>
+          <p class="desc">ACF = Caixa + CDB + Derivativos (ativo). PCF = Empréstimos CP + Arrendamento + Derivativos (passivo) + Dividendos a pagar. Além disso, <code>CGL = NCG + ST</code>.</p>
+          <h3>Caixa Mínimo Operacional e Folga</h3>
+          <p class="desc"><code>Giro de caixa = 360 ÷ Ciclo financeiro</code>; <code>Caixa mínimo = Desembolsos previstos ÷ Giro de caixa</code>; <code>Folga = Caixa real (Caixa + CDB) − Caixa mínimo</code>.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ABA 5: ESTRATÉGIAS -->
+    <section id="estrategias" class="tab-panel">
+      <div class="card">
+        <h2>Simulador de Resolução de Problemas (Problemas Pré-Definidos)</h2>
+        <p class="desc">Selecione o <strong>Ano-Base para Estimativa</strong> e escolha um dos problemas pré-definidos abaixo. O simulador aplica um ajuste prático de prazos/desembolsos e calcula a resposta usando os dados reais do ano selecionado na planilha.</p>
+
+        <div class="sim-layout">
+          <div>
+            <div class="control-group">
+              <label for="stratBaseYear" class="kpi-label">Ano-Base para Estimativa</label>
+              <select id="stratBaseYear"></select>
+            </div>
+
+            <div class="control-group">
+              <span class="kpi-label" style="display:block; margin-bottom:8px;">Selecione o Problema Pré-Definido</span>
+              <div id="predefinedProblemsList"></div>
+            </div>
+
+            <div class="control-group" id="problemAdjustments">
+              <span class="kpi-label" style="display:block;">Valores da simulação</span>
+              <p class="kpi-sub">Altere os valores predefinidos antes de calcular.</p>
+              <div id="problemAdjustmentFields" class="problem-adjustment-grid"></div>
+            </div>
+
+            <div class="btn-row">
+              <button type="button" class="btn btn-primary" id="applyProblemBtn">Calcular Resolução do Problema</button>
+              <button type="button" class="btn btn-outline" id="resetProblemBtn">Selecionar Problema Padrão</button>
+            </div>
+          </div>
+
+          <div id="problemSolutionBox" class="callout ok-box"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Estratégias para melhorar a gestão do capital de giro</h2>
+        <p class="desc">As recomendações abaixo buscam reduzir a imobilização de recursos sem comprometer a produção, as vendas ou o relacionamento com parceiros.</p>
+        <div id="managementPlan" class="callout"></div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card" id="strategyStockCard">
+          <h3>1. Gestão de estoques</h3>
+          <p id="strategyStockFocus"><strong>Foco: PMRE</strong></p>
+          <ul class="card-list" id="strategyStockList">
+            <li>Adotar previsão de demanda e planejamento de materiais.</li>
+            <li>Definir níveis mínimos, máximos e estoque de segurança por criticidade.</li>
+            <li>Identificar materiais parados, obsoletos ou de baixo giro.</li>
+            <li>Revisar compras e programação de produção para evitar excesso.</li>
+          </ul>
+          <div class="callout warn-box" id="strategyStockRisk"><strong>Risco do ajuste:</strong> reduzir estoques indiscriminadamente pode provocar ruptura e atrasos na produção.</div>
+        </div>
+
+        <div class="card" id="strategyReceivableCard">
+          <h3>2. Gestão de recebíveis e crédito</h3>
+          <p id="strategyReceivableFocus"><strong>Foco: PMRV</strong></p>
+          <ul class="card-list" id="strategyReceivableList">
+            <li>Monitorar vencimentos e atrasos por cliente.</li>
+            <li>Revisar limites de crédito e critérios de concessão.</li>
+            <li>Reforçar lembretes e processos de cobrança.</li>
+            <li>Negociar condições de pagamento e avaliar antecipação apenas quando o custo for justificável.</li>
+          </ul>
+          <div class="callout warn-box" id="strategyReceivableRisk"><strong>Risco do ajuste:</strong> endurecer o crédito pode afastar clientes ou reduzir vendas.</div>
+        </div>
+
+        <div class="card" id="strategySupplierCard">
+          <h3>3. Negociação com fornecedores</h3>
+          <p id="strategySupplierFocus"><strong>Foco: PMPC</strong></p>
+          <ul class="card-list" id="strategySupplierList">
+            <li>Negociar prazos compatíveis com o recebimento dos clientes.</li>
+            <li>Priorizar acordos sustentáveis com fornecedores estratégicos.</li>
+            <li>Consolidar compras quando houver ganho de negociação, sem gerar excesso de estoque.</li>
+            <li>Evitar atrasos que prejudiquem fornecimento ou reputação.</li>
+          </ul>
+          <div class="callout warn-box" id="strategySupplierRisk"><strong>Risco do ajuste:</strong> alongar pagamentos sem acordo pode comprometer fornecedores e continuidade de abastecimento.</div>
+        </div>
+
+        <div class="card" id="strategyCashCard">
+          <h3>4. Planejamento e reserva de caixa</h3>
+          <p id="strategyCashFocus"><strong>Foco: liquidez e ST</strong></p>
+          <ul class="card-list" id="strategyCashList">
+            <li>Projetar entradas e saídas semanalmente e mensalmente.</li>
+            <li>Simular cenários de queda de vendas, atrasos e aumento de custos.</li>
+            <li>Estabelecer uma reserva mínima de liquidez com critérios definidos.</li>
+            <li>Acompanhar indicadores e revisar premissas regularmente.</li>
+          </ul>
+          <div class="callout ok-box" id="strategyCashBenefit"><strong>Benefício esperado:</strong> antecipar períodos de pressão financeira e tomar decisões antes que falte caixa.</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Plano de ação sugerido</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Prazo</th>
+                <th>Ação</th>
+                <th>Indicador de acompanhamento</th>
+                <th>Objetivo</th>
+              </tr>
+            </thead>
+            <tbody id="actionPlanBody">
+              <tr>
+                <td>30 dias</td>
+                <td>Mapear estoque de baixo giro e atrasos de clientes</td>
+                <td>PMRE e PMRV</td>
+                <td>Identificar oportunidades imediatas</td>
+              </tr>
+              <tr>
+                <td>60 dias</td>
+                <td>Revisar parâmetros de compras, crédito e cobrança</td>
+                <td>PMRE, PMRV e PMPC</td>
+                <td>Propor ajustes operacionais</td>
+              </tr>
+              <tr>
+                <td>90 dias</td>
+                <td>Implantar projeção de caixa e painel de acompanhamento</td>
+                <td>NCG, ST e fluxo de caixa</td>
+                <td>Melhorar previsibilidade e controle</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ABA 6: COMPARATIVO E CONCLUSÃO -->
+    <section id="comparativo" class="tab-panel">
+      <div class="card">
+        <h2>Comparativo dos períodos da pandemia (Dados Reais)</h2>
+        <p class="desc">Pré-pandemia: 2017–2019 • Durante a pandemia: 2020–2021 • Pós-pandemia: 2022–2025.</p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Ano</th>
+                <th>PMRV</th>
+                <th>PMRE</th>
+                <th>PMPC</th>
+                <th>Ciclo Financeiro</th>
+                <th>NCG</th>
+                <th>ST</th>
+                <th>Cx. Mín.</th>
+                <th>Folga Cx.</th>
+              </tr>
+            </thead>
+            <tbody id="comparisonBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h2>Leitura crítica</h2>
+          <div class="callout ok-box" id="periodPreRead"><strong>Pré-pandemia:</strong> preparando comparação...</div>
+          <div class="callout warn-box" id="periodDuringRead"><strong>Durante a pandemia:</strong> preparando comparação...</div>
+          <div class="callout" id="periodPostRead"><strong>Pós-pandemia:</strong> preparando comparação...</div>
+        </div>
+
+        <div class="card">
+          <h2>Conclusão e transparência dos dados</h2>
+          <p>Todos os valores desta versão refletem exatamente a planilha <em>Marcopolo_base_calculos_2017_2025.xlsx</em> (segmento industrial em R$ milhões, base 360 dias, com indicadores consolidados de aging/carteira e composição de estoques).</p>
+          <p><strong>Premissas importantes da planilha:</strong> saldos finais (não médias), 360 dias, <em>Compras = (−CPV) − Estoque inicial + Estoque final</em>, <em>Outras contas a receber</em> tratadas como ACO, dividendos a pagar e arrendamento circulante tratados como PCF, e efeitos específicos como créditos tributários/venda de imóvel em 2021, incorporação da Ciferal/impairment em 2023 e consolidação da Metalsur/Loma e hiperinflação em 2024–2025.</p>
+        </div>
+      </div>
+    </section>
+
+    <div class="footer-note">
+      Protótipo educacional (HTML/CSS/JS puro) vinculado aos dados reais da planilha Marcopolo_base_calculos_2017_2025.xlsx (valores em R$ milhões, base 360 dias).
+    </div>
+  </main>
+
+  <script>
+    // Dados reais extraídos de Marcopolo_base_calculos_2017_2025.xlsx
+    // Valores monetários convertidos de R$ mil para R$ milhões (÷ 1000), base 360 dias.
+    const DATA = [
+      {
+        year: 2017, phase: "Pré",
+        caixaEquiv: 946.698, cdbCirc: 187.373, derivAtivo: 0.445,
+        clientesCirc: 558.154, clientesNc: 15.673, estoques: 521.364, outrasRecCirc: 291.596,
+        fornecedores: 366.399, empCirc: 647.130, arrendCirc: 0.0, derivPassivo: 2.811,
+        outrasPagCirc: 408.619, divMinPagar: 15.325,
+        acIndRep: 2505.630, pcIndRep: 1424.959,
+        recLiqInd: 2840.440, cpvInd: -2472.347, despVendasInd: -154.905, despAdmInd: -151.033,
+        outrasRecDespInd: -80.014, deprAmortInd: 45.166, lucroLiqInd: 79.311, cxOpInd: 134.412,
+        estInicial: 472.057,
+        pmrv: 72.72736500366141, pmre: 75.91613758101109, compras: 2521.654,
+        pmpc: 52.30838172088636, cicloOp: 148.6435025846725, cicloFin: 96.33512086378614,
+        aco: 1371.114, acf: 1134.516, pco: 759.693, pcf: 665.266,
+        ncg: 611.421, st: 469.250, cgl: 1080.671, ncgPctRec: 0.21525573502696765,
+        convCxLucro: 1.6947460000000002, outrasOpLucro: -1.0088638398204536,
+        desembolsos: 2733.119, giroCaixa: 3.7369548653411867, caixaMin: 731.3759876161449,
+        caixaReal: 1134.071, folgaCaixa: 402.6950123838551,
+        vencidoPct: 0.15845053496383804, vencido90Pct: 0.09811579108369325,
+        coberturaPdd: 0.5524221906587421, pddPctCart: 0.08753159163577302,
+        estPaPct: 0.22334659029300586, estWipPct: 0.2243526180388966, estMpPct: 0.5523007916680976
+      },
+      {
+        year: 2018, phase: "Pré",
+        caixaEquiv: 833.839, cdbCirc: 89.928, derivAtivo: 1.453,
+        clientesCirc: 860.481, clientesNc: 16.645, estoques: 686.821, outrasRecCirc: 267.900,
+        fornecedores: 418.037, empCirc: 658.884, arrendCirc: 0.0, derivPassivo: 0.048,
+        outrasPagCirc: 570.841, divMinPagar: 34.753,
+        acIndRep: 2740.422, pcIndRep: 1647.810,
+        recLiqInd: 4155.112, cpvInd: -3533.152, despVendasInd: -214.964, despAdmInd: -162.335,
+        outrasRecDespInd: -26.573, deprAmortInd: 60.521, lucroLiqInd: 199.468, cxOpInd: 120.961,
+        estInicial: 521.364,
+        pmrv: 75.99443769506093, pmre: 69.98157735642282, compras: 3698.609,
+        pmpc: 40.68917260516048, cicloOp: 145.97601505148375, cicloFin: 105.28684244632327,
+        aco: 1815.202, acf: 925.220, pco: 954.125, pcf: 693.685,
+        ncg: 861.077, st: 231.535, cgl: 1092.612, ncgPctRec: 0.20723316242739065,
+        convCxLucro: 0.6064180720717107, outrasOpLucro: -0.13321936350692843,
+        desembolsos: 3849.930, giroCaixa: 3.419230607314671, caixaMin: 1125.9638033827557,
+        caixaReal: 923.767, folgaCaixa: -202.19680338275573,
+        vencidoPct: 0.19576022190832016, vencido90Pct: 0.08418408545273855,
+        coberturaPdd: 0.47864771490321666, pddPctCart: 0.09370018307065823,
+        estPaPct: 0.22337618681420383, estWipPct: 0.22423151034791008, estMpPct: 0.5523923028378861
+      },
+      {
+        year: 2019, phase: "Pré",
+        caixaEquiv: 1057.258, cdbCirc: 98.314, derivAtivo: 1.849,
+        clientesCirc: 570.099, clientesNc: 0.0, estoques: 552.691, outrasRecCirc: 208.274,
+        fornecedores: 377.527, empCirc: 415.835, arrendCirc: 13.593, derivPassivo: 0.548,
+        outrasPagCirc: 511.481, divMinPagar: 16.958,
+        acIndRep: 2488.485, pcIndRep: 1305.391,
+        recLiqInd: 4276.782, cpvInd: -3664.255, despVendasInd: -204.405, despAdmInd: -170.065,
+        outrasRecDespInd: -17.486, deprAmortInd: 86.148, lucroLiqInd: 206.891, cxOpInd: 645.039,
+        estInicial: 686.821,
+        pmrv: 47.98834731347074, pmre: 54.299919083142414, compras: 3530.125,
+        pmpc: 38.499968131439964, cicloOp: 102.28826639661316, cicloFin: 63.78829826517319,
+        aco: 1331.064, acf: 1157.421, pco: 858.457, pcf: 446.934,
+        ncg: 472.607, st: 710.487, cgl: 1183.094, ncgPctRec: 0.110505281774942,
+        convCxLucro: 3.1177721602196326, outrasOpLucro: -0.08451793456457748,
+        desembolsos: 3952.577, giroCaixa: 5.643668381515241, caixaMin: 700.3558237059668,
+        caixaReal: 1155.572, folgaCaixa: 455.2161762940332,
+        vencidoPct: 0.11388287433678924, vencido90Pct: 0.07692694997216176,
+        coberturaPdd: 0.9017921789999999, pddPctCart: 0.10269870761192725,
+        estPaPct: 0.18407731887324256, estWipPct: 0.20088090963487312, estMpPct: 0.6150417714918844
+      },
+      {
+        year: 2020, phase: "Pandemia",
+        caixaEquiv: 989.248, cdbCirc: 0.0, derivAtivo: 2.641,
+        clientesCirc: 702.407, clientesNc: 0.0, estoques: 748.411, outrasRecCirc: 379.187,
+        fornecedores: 358.825, empCirc: 503.673, arrendCirc: 18.371, derivPassivo: 5.723,
+        outrasPagCirc: 616.790, divMinPagar: 0.092,
+        acIndRep: 2821.894, pcIndRep: 1485.011,
+        recLiqInd: 3491.945, cpvInd: -2943.337, despVendasInd: -191.595, despAdmInd: -164.578,
+        outrasRecDespInd: 2.929, deprAmortInd: 95.781, lucroLiqInd: 84.760, cxOpInd: 191.563,
+        estInicial: 552.691,
+        pmrv: 72.41422759808645, pmre: 91.53827798175999, compras: 3139.057,
+        pmpc: 41.15153053942633, cicloOp: 163.95250557984645, cicloFin: 122.80097504042012,
+        aco: 1830.005, acf: 991.889, pco: 957.152, pcf: 527.859,
+        ncg: 872.853, st: 464.030, cgl: 1336.883, ncgPctRec: 0.24996184075064182,
+        convCxLucro: 2.260063709296838, outrasOpLucro: 0.03455639452571968,
+        desembolsos: 3203.729, giroCaixa: 2.9315726386532645, caixaMin: 1092.836319546241,
+        caixaReal: 989.248, folgaCaixa: -103.58831954624107,
+        vencidoPct: 0.15132590922362133, vencido90Pct: 0.09885053823499543,
+        coberturaPdd: 0.6174895246563794, pddPctCart: 0.09344216512643445,
+        estPaPct: 0.31709567919933505, estWipPct: 0.15665581437317008, estMpPct: 0.5262485064274949
+      },
+      {
+        year: 2021, phase: "Pandemia",
+        caixaEquiv: 1279.679, cdbCirc: 0.0, derivAtivo: 0.683,
+        clientesCirc: 411.051, clientesNc: 27.380, estoques: 987.614, outrasRecCirc: 362.078,
+        fornecedores: 459.049, empCirc: 691.958, arrendCirc: 19.661, derivPassivo: 0.921,
+        outrasPagCirc: 662.307, divMinPagar: 71.401,
+        acIndRep: 3041.105, pcIndRep: 1814.235,
+        recLiqInd: 3413.386, cpvInd: -3101.684, despVendasInd: -183.033, despAdmInd: -190.322,
+        outrasRecDespInd: 257.462, deprAmortInd: 105.221, lucroLiqInd: 350.107, cxOpInd: 83.731,
+        estInicial: 748.411,
+        pmrv: 46.24006778020417, pmre: 114.62837606925786, compras: 3340.887,
+        pmpc: 49.46517197379019, cicloOp: 160.86844384946203, cicloFin: 111.40327187567184,
+        aco: 1760.743, acf: 1280.362, pco: 1030.294, pcf: 783.941,
+        ncg: 730.449, st: 496.421, cgl: 1226.870, ncgPctRec: 0.2139954285861605,
+        convCxLucro: 0.23915831445815137, outrasOpLucro: 0.7353808978398033,
+        desembolsos: 3369.818, giroCaixa: 3.2315031797236324, caixaMin: 1042.8020069635675,
+        caixaReal: 1279.679, folgaCaixa: 236.87699303643252,
+        vencidoPct: 0.1453391429628722, vencido90Pct: 0.0927784244200167,
+        coberturaPdd: 0.8761106866062657, pddPctCart: 0.12733307100183637,
+        estPaPct: 0.22533158262734525, estWipPct: 0.15739246148772924, estMpPct: 0.6172759558849255
+      },
+      {
+        year: 2022, phase: "Pós",
+        caixaEquiv: 1114.967, cdbCirc: 0.0, derivAtivo: 0.598,
+        clientesCirc: 980.577, clientesNc: 101.375, estoques: 1338.351, outrasRecCirc: 347.899,
+        fornecedores: 653.253, empCirc: 563.884, arrendCirc: 15.110, derivPassivo: 0.975,
+        outrasPagCirc: 868.727, divMinPagar: 84.179,
+        acIndRep: 3782.392, pcIndRep: 2086.839,
+        recLiqInd: 5312.481, cpvInd: -4533.926, despVendasInd: -223.565, despAdmInd: -225.442,
+        outrasRecDespInd: -49.633, deprAmortInd: 119.436, lucroLiqInd: 421.391, cxOpInd: 4.856,
+        estInicial: 987.614,
+        pmrv: 73.31842692698571, pmre: 106.26688657909282, compras: 4884.663,
+        pmpc: 48.144785013827975, cicloOp: 179.58531350607853, cicloFin: 131.44052849225055,
+        aco: 2666.827, acf: 1115.565, pco: 1422.691, pcf: 664.148,
+        ncg: 1244.136, st: 451.417, cgl: 1695.553, ncgPctRec: 0.23419114346008954,
+        convCxLucro: 0.011523739235057227, outrasOpLucro: -0.11778372105716544,
+        desembolsos: 4863.497, giroCaixa: 2.7388814820438683, caixaMin: 1775.723930315206,
+        caixaReal: 1114.967, folgaCaixa: -660.7569303152061,
+        vencidoPct: 0.1717202055517751, vencido90Pct: 0.05791377019603549,
+        coberturaPdd: 0.4226418761140414, pddPctCart: 0.07257614984109107,
+        estPaPct: 0.31290864266398047, estWipPct: 0.12963363810545697, estMpPct: 0.5574577192305626
+      },
+      {
+        year: 2023, phase: "Pós",
+        caixaEquiv: 1486.554, cdbCirc: 0.0, derivAtivo: 0.063,
+        clientesCirc: 905.927, clientesNc: 0.0, estoques: 1618.848, outrasRecCirc: 349.164,
+        fornecedores: 793.849, empCirc: 481.946, arrendCirc: 17.515, derivPassivo: 0.657,
+        outrasPagCirc: 842.427, divMinPagar: 34.227,
+        acIndRep: 4360.556, pcIndRep: 2118.879,
+        recLiqInd: 6539.149, cpvInd: -5067.163, despVendasInd: -335.585, despAdmInd: -283.451,
+        outrasRecDespInd: -65.107, deprAmortInd: 145.910, lucroLiqInd: 782.550, cxOpInd: 1194.111,
+        estInicial: 1338.351,
+        pmrv: 49.87402795073182, pmre: 115.01208861842416, compras: 5347.660,
+        pmpc: 53.44124345975623, cicloOp: 164.886116569156, cicloFin: 111.44487310939977,
+        aco: 2873.939, acf: 1486.617, pco: 1584.534, pcf: 534.345,
+        ncg: 1289.405, st: 952.272, cgl: 2241.677, ncgPctRec: 0.19718238565905136,
+        convCxLucro: 1.5259229442208166, outrasOpLucro: -0.08319851766660277,
+        desembolsos: 5540.289, giroCaixa: 3.230296712832702, caixaMin: 1715.1021831231072,
+        caixaReal: 1486.554, folgaCaixa: -228.54818312310715,
+        vencidoPct: 0.11223948848387424, vencido90Pct: 0.07410356087431103,
+        coberturaPdd: 0.6502693604231764, pddPctCart: 0.07298589008034354,
+        estPaPct: 0.21540975382756578, estWipPct: 0.1784819209973243, estMpPct: 0.6061083251751099
+      },
+      {
+        year: 2024, phase: "Pós",
+        caixaEquiv: 2044.850, cdbCirc: 0.0, derivAtivo: 5.170,
+        clientesCirc: 975.310, clientesNc: 0.0, estoques: 1828.739, outrasRecCirc: 266.278,
+        fornecedores: 679.346, empCirc: 815.290, arrendCirc: 26.861, derivPassivo: 0.633,
+        outrasPagCirc: 1191.993, divMinPagar: 2.600,
+        acIndRep: 5120.347, pcIndRep: 2687.262,
+        recLiqInd: 8400.935, cpvInd: -6352.497, despVendasInd: -356.678, despAdmInd: -355.502,
+        outrasRecDespInd: -19.629, deprAmortInd: 167.152, lucroLiqInd: 1187.299, cxOpInd: 1472.817,
+        estInicial: 1618.848,
+        pmrv: 41.79434789103832, pmre: 103.63578369261724, compras: 6562.388,
+        pmpc: 37.26762270076076, cicloOp: 145.43013158365556, cicloFin: 108.1625088828948,
+        aco: 3070.327, acf: 2050.020, pco: 1841.878, pcf: 845.384,
+        ncg: 1228.449, st: 1204.636, cgl: 2433.085, ncgPctRec: 0.1462276520411121,
+        convCxLucro: 1.2404771250123178, outrasOpLucro: -0.016532482550730692,
+        desembolsos: 6897.525, giroCaixa: 3.3283251073869546, caixaMin: 2072.371147462735,
+        caixaReal: 2044.850, folgaCaixa: -27.52114746273495,
+        vencidoPct: 0.122536988920462, vencido90Pct: 0.04604031704549693,
+        coberturaPdd: 0.4463721644209449, pddPctCart: 0.0546971264045897,
+        estPaPct: 0.20133709583804425, estWipPct: 0.24471988565788557, estMpPct: 0.5539430185040702
+      },
+      {
+        year: 2025, phase: "Pós",
+        caixaEquiv: 2179.202, cdbCirc: 0.0, derivAtivo: 0.145,
+        clientesCirc: 995.716, clientesNc: 1.192, estoques: 1771.089, outrasRecCirc: 360.338,
+        fornecedores: 595.686, empCirc: 753.078, arrendCirc: 25.730, derivPassivo: 10.664,
+        outrasPagCirc: 1296.216, divMinPagar: 4.800,
+        acIndRep: 5306.490, pcIndRep: 2655.644,
+        recLiqInd: 8796.837, cpvInd: -6589.675, despVendasInd: -420.826, despAdmInd: -441.477,
+        outrasRecDespInd: 18.780, deprAmortInd: 156.041, lucroLiqInd: 1193.312, cxOpInd: 1449.579,
+        estInicial: 1828.739,
+        pmrv: 40.79725587731136, pmre: 96.7562201474276, compras: 6532.025,
+        pmpc: 32.83008714755302, cicloOp: 137.55347602473896, cicloFin: 104.72338887718594,
+        aco: 3127.143, acf: 2179.347, pco: 1861.372, pcf: 794.272,
+        ncg: 1265.771, st: 1385.075, cgl: 2650.846, ncgPctRec: 0.1438893314722104,
+        convCxLucro: 1.214752721836368, outrasOpLucro: 0.015737711512161113,
+        desembolsos: 7295.937, giroCaixa: 3.437627392784839, caixaMin: 2122.3751791290437,
+        caixaReal: 2179.202, folgaCaixa: 56.82682087095628,
+        vencidoPct: 0.07614922000799999, vencido90Pct: 0.04386769628771226,
+        coberturaPdd: 0.6720465359555264, pddPctCart: 0.05117582015328621,
+        estPaPct: 0.26340363869000185, estWipPct: 0.2117347597994816, estMpPct: 0.5248616015105166
+      }
+    ];
+
+    const fmtNum = (n, dec = 1) => {
+      const clean = Math.abs(n) < (0.5 / Math.pow(10, dec)) ? 0 : n;
+      return clean.toLocaleString("pt-BR", { minimumFractionDigits: dec, maximumFractionDigits: dec });
+    };
+
+    const fmtBRL = (n, dec = 1) => {
+      const clean = Math.abs(n) < (0.5 / Math.pow(10, dec)) ? 0 : n;
+      return "R$ " + clean.toLocaleString("pt-BR", { minimumFractionDigits: dec, maximumFractionDigits: dec }) + " mi";
+    };
+
+    const fmtSignedBRL = (n, dec = 1) => {
+      const clean = Math.abs(n) < (0.5 / Math.pow(10, dec)) ? 0 : n;
+      if (clean === 0) return fmtBRL(0, dec);
+      return (clean > 0 ? "+" : "-") + fmtBRL(Math.abs(clean), dec);
+    };
+
+    const fmtSignedNum = (n, dec = 1, suffix = "") => {
+      const clean = Math.abs(n) < (0.5 / Math.pow(10, dec)) ? 0 : n;
+      if (clean === 0) return fmtNum(0, dec) + suffix;
+      return (clean > 0 ? "+" : "-") + fmtNum(Math.abs(clean), dec) + suffix;
+    };
+
+    // Tabs
+    document.querySelectorAll(".tab-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+        document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+        btn.classList.add("active");
+        document.getElementById(btn.dataset.tab).classList.add("active");
+      });
+    });
+
+    // Diagnóstico
+    function renderDiagnostico() {
+      const preRows = DATA.filter(d => d.phase === "Pré");
+      const posRows = DATA.filter(d => d.phase === "Pós");
+      const r2017 = DATA.find(d => d.year === 2017);
+      const r2025 = DATA.find(d => d.year === 2025);
+
+      const avgPreCycle = preRows.reduce((s, x) => s + x.cicloFin, 0) / preRows.length;
+      const avgPosCycle = posRows.reduce((s, x) => s + x.cicloFin, 0) / posRows.length;
+
+      document.getElementById("kpiCycleAvg").textContent = `${fmtNum(avgPreCycle)}d → ${fmtNum(avgPosCycle)}d`;
+      document.getElementById("kpiNcgRev").textContent = `${fmtNum(r2017.ncgPctRec * 100)}% → ${fmtNum(r2025.ncgPctRec * 100)}%`;
+      document.getElementById("kpiNcgRevSub").textContent = `NCG de ${fmtBRL(r2017.ncg)} (2017) a ${fmtBRL(r2025.ncg)} (2025)`;
+      document.getElementById("kpiSt2025").textContent = fmtBRL(r2025.st);
+      document.getElementById("kpiStSub").textContent = `Em 2025 (vs. ${fmtBRL(r2017.st)} em 2017; CGL de ${fmtBRL(r2025.cgl)})`;
+
+      const chart = document.getElementById("cycleChart");
+      const tbody = document.getElementById("historyBody");
+      const maxCycle = Math.max(...DATA.map(d => d.cicloFin));
+      const minCycle = Math.min(...DATA.map(d => d.cicloFin));
+
+      chart.innerHTML = DATA.map(d => {
+        const pct = Math.round((d.cicloFin / maxCycle) * 100);
+        const cls = d.cicloFin === maxCycle ? "peak" : d.cicloFin === minCycle ? "best" : "";
+        return `
+          <div class="bar-row">
+            <strong>${d.year}</strong>
+            <div class="bar-track">
+              <div class="bar-fill ${cls}" style="width:${pct}%"></div>
+            </div>
+            <span>${fmtNum(d.cicloFin)} dias</span>
+          </div>
+        `;
+      }).join("");
+
+      tbody.innerHTML = DATA.map(d => {
+        const badgeClass = d.phase === "Pré" ? "p-pre" : d.phase === "Pandemia" ? "p-pan" : "p-pos";
+        const folgaCls = d.folgaCaixa < 0 ? "neg" : "pos";
+        return `
+          <tr>
+            <td><strong>${d.year}</strong></td>
+            <td><span class="phase-pill ${badgeClass}">${d.phase}</span></td>
+            <td>${fmtNum(d.pmrv)}</td>
+            <td>${fmtNum(d.pmre)}</td>
+            <td>${fmtNum(d.pmpc)}</td>
+            <td><strong>${fmtNum(d.cicloFin)}</strong></td>
+            <td>${fmtBRL(d.ncg)}</td>
+            <td>${fmtBRL(d.st)}</td>
+            <td>${fmtBRL(d.cgl)}</td>
+            <td>${fmtBRL(d.caixaMin)}</td>
+            <td class="${folgaCls}"><strong>${fmtSignedBRL(d.folgaCaixa)}</strong></td>
+            <td>${fmtNum(d.convCxLucro, 2)}x</td>
+            <td>${fmtNum(d.vencidoPct * 100)}%</td>
+          </tr>
+        `;
+      }).join("");
+
+      const comparisonBody = document.getElementById("comparisonBody");
+      if (comparisonBody) {
+        const periods = [
+          { label: "Pré-pandemia", years: [2017, 2018, 2019] },
+          { label: "Durante a pandemia", years: [2020, 2021] },
+          { label: "Pós-pandemia", years: [2022, 2023, 2024, 2025] }
+        ];
+        const avg = (rows, field) => rows.reduce((sum, row) => sum + row[field], 0) / rows.length;
+        const periodRows = periods.map(period => {
+          const rows = DATA.filter(row => period.years.includes(row.year));
+          return {
+            label: period.label,
+            pmrv: avg(rows, "pmrv"),
+            pmre: avg(rows, "pmre"),
+            pmpc: avg(rows, "pmpc"),
+            cicloFin: avg(rows, "cicloFin"),
+            ncg: avg(rows, "ncg"),
+            st: avg(rows, "st"),
+            caixaMin: avg(rows, "caixaMin"),
+            folgaCaixa: avg(rows, "folgaCaixa")
+          };
+        });
+
+        comparisonBody.innerHTML = periodRows.map(d => {
+          const folgaCls = d.folgaCaixa < 0 ? "neg" : "pos";
+          return `
+            <tr>
+              <td><strong>${d.label}</strong></td>
+              <td>${fmtNum(d.pmrv)}</td>
+              <td>${fmtNum(d.pmre)}</td>
+              <td>${fmtNum(d.pmpc)}</td>
+              <td><strong>${fmtNum(d.cicloFin)}</strong></td>
+              <td>${fmtBRL(d.ncg)}</td>
+              <td>${fmtBRL(d.st)}</td>
+              <td>${fmtBRL(d.caixaMin)}</td>
+              <td class="${folgaCls}"><strong>${fmtSignedBRL(d.folgaCaixa)}</strong></td>
+            </tr>
+          `;
+        }).join("");
+
+        const pre = periodRows[0];
+        const during = periodRows[1];
+        const post = periodRows[2];
+        document.getElementById("periodPreRead").innerHTML =
+          `<strong>Pré-pandemia — Média 2017–2019:</strong> PMRV de ${fmtNum(pre.pmrv)} dias, PMRE de ${fmtNum(pre.pmre)} dias, ciclo de ${fmtNum(pre.cicloFin)} dias, NCG de ${fmtBRL(pre.ncg)} e folga média de ${fmtSignedBRL(pre.folgaCaixa)}.`;
+        document.getElementById("periodDuringRead").innerHTML =
+          `<strong>Durante a pandemia — Média 2020–2021:</strong> ciclo médio de ${fmtNum(during.cicloFin)} dias, PMRE elevado a ${fmtNum(during.pmre)} dias e NCG média de ${fmtBRL(during.ncg)}.`;
+        document.getElementById("periodPostRead").innerHTML =
+          `<strong>Pós-pandemia — Média 2022–2025:</strong> PMRV de ${fmtNum(post.pmrv)} dias, PMRE de ${fmtNum(post.pmre)} dias, ciclo de ${fmtNum(post.cicloFin)} dias, ST de ${fmtBRL(post.st)} e folga média de ${fmtSignedBRL(post.folgaCaixa)}.`;
+      }
+    }
+
+    // Cálculo exato a partir das linhas reais da planilha (em R$ milhões, 360 dias)
+    function calcScenarioFromBase(base, newPmre, newPmrv, newPmpc, disbPct) {
+      const cpvPos = -base.cpvInd;
+      const dClientes = ((newPmrv - base.pmrv) * base.recLiqInd) / 360.0;
+      const dEstoques = ((newPmre - base.pmre) * cpvPos) / 360.0;
+      const dFornec = ((newPmpc - base.pmpc) * base.compras) / 360.0;
+
+      const ncgDelta = dClientes + dEstoques - dFornec;
+      const simNcg = base.ncg + ncgDelta;
+      const simSt = base.cgl - simNcg;
+      const stDelta = simSt - base.st;
+
+      const simCycle = newPmre + newPmrv - newPmpc;
+      const cycleDiff = simCycle - base.cicloFin;
+
+      const simDisb = base.desembolsos * (1 + disbPct / 100);
+      const simGiro = simCycle > 0 ? 360.0 / simCycle : base.giroCaixa;
+      const simMinCash = Math.max(0, simDisb / simGiro);
+      const minCashDelta = simMinCash - base.caixaMin;
+      const simFolga = base.caixaReal - simMinCash;
+
+      return {
+        simCycle, cycleDiff,
+        ncgDelta, simNcg,
+        stDelta, simSt,
+        simMinCash, minCashDelta,
+        simFolga
+      };
+    }
+
+    // Aba 2: Simulador
+    const yearSelect = document.getElementById("baseYear");
+    const pmreSlider = document.getElementById("pmreSlider");
+    const pmrvSlider = document.getElementById("pmrvSlider");
+    const pmpcSlider = document.getElementById("pmpcSlider");
+    const disbSlider = document.getElementById("disbSlider");
+
+    DATA.forEach(d => {
+      const opt = document.createElement("option");
+      opt.value = d.year;
+      opt.textContent = `${d.year} (${d.phase}) — Ciclo: ${fmtNum(d.cicloFin)}d | NCG: ${fmtBRL(d.ncg)} | ST: ${fmtBRL(d.st)}`;
+      if (d.year === 2025) opt.selected = true;
+      yearSelect.appendChild(opt);
+    });
+
+    function getBaseRow() {
+      return DATA.find(d => d.year === Number(yearSelect.value)) || DATA[DATA.length - 1];
+    }
+
+    function loadYearIntoSliders() {
+      const base = getBaseRow();
+      pmreSlider.value = base.pmre.toFixed(1);
+      pmrvSlider.value = base.pmrv.toFixed(1);
+      pmpcSlider.value = base.pmpc.toFixed(1);
+      disbSlider.value = 0;
+      updateSimulator();
+    }
+
+    function updateSimulator() {
+      const base = getBaseRow();
+      const pmre = parseFloat(pmreSlider.value);
+      const pmrv = parseFloat(pmrvSlider.value);
+      const pmpc = parseFloat(pmpcSlider.value);
+      const disbPct = parseFloat(disbSlider.value);
+
+      document.getElementById("pmreVal").textContent = `${fmtNum(pmre)} dias`;
+      document.getElementById("pmrvVal").textContent = `${fmtNum(pmrv)} dias`;
+      document.getElementById("pmpcVal").textContent = `${fmtNum(pmpc)} dias`;
+      document.getElementById("disbVal").textContent = `${disbPct >= 0 ? "+" : ""}${disbPct}%`;
+
+      document.getElementById("simBaseContext").textContent =
+        `Base ${base.year}: Rec. Líq. ${fmtBRL(base.recLiqInd)}, −CPV ${fmtBRL(-base.cpvInd)}, Compras ${fmtBRL(base.compras)}, Desembolsos ${fmtBRL(base.desembolsos)} e CGL ${fmtBRL(base.cgl)}.`;
+
+      const res = calcScenarioFromBase(base, pmre, pmrv, pmpc, disbPct);
+
+      document.getElementById("simCycle").textContent = `${fmtNum(res.simCycle)} dias`;
+      const cycleDeltaEl = document.getElementById("simCycleDelta");
+      cycleDeltaEl.textContent = `${fmtSignedNum(res.cycleDiff, 1, " dias")} vs. ${base.year}`;
+      cycleDeltaEl.className = "delta " + (res.cycleDiff <= 0 ? "pos" : "neg");
+
+      document.getElementById("simNcg").textContent = fmtBRL(res.simNcg);
+      const ncgDeltaEl = document.getElementById("simNcgDelta");
+      ncgDeltaEl.textContent = `${fmtSignedBRL(res.ncgDelta)} vs. ${base.year}`;
+      ncgDeltaEl.className = "delta " + (res.ncgDelta <= 0 ? "pos" : "neg");
+
+      document.getElementById("simSt").textContent = fmtBRL(res.simSt);
+      const stDeltaEl = document.getElementById("simStDelta");
+      stDeltaEl.textContent = `${fmtSignedBRL(res.stDelta)} vs. ${base.year}`;
+      stDeltaEl.className = "delta " + (res.stDelta >= 0 ? "pos" : "neg");
+
+      document.getElementById("simMinCash").textContent = fmtBRL(res.simMinCash);
+      const minCashDeltaEl = document.getElementById("simMinCashDelta");
+      minCashDeltaEl.textContent = `${fmtSignedBRL(res.minCashDelta)} vs. ${fmtBRL(base.caixaMin)}`;
+      minCashDeltaEl.className = "delta " + (res.minCashDelta <= 0 ? "pos" : "warn");
+
+      const interp = document.getElementById("simInterpretation");
+      if (res.cycleDiff < -0.5) {
+        interp.className = "callout ok-box";
+        interp.innerHTML = `<strong>Liberação de giro:</strong> Encurtar o ciclo em <strong>${fmtNum(Math.abs(res.cycleDiff))} dias</strong> altera a NCG em <strong>${fmtSignedBRL(res.ncgDelta)}</strong>, desloca <strong>${fmtSignedBRL(res.stDelta)}</strong> para o Saldo de Tesouraria e ajusta o caixa mínimo em <strong>${fmtSignedBRL(res.minCashDelta)}</strong> (folga estimada de <strong>${fmtSignedBRL(res.simFolga)}</strong> frente ao caixa real de ${fmtBRL(base.caixaReal)}).`;
+      } else if (res.cycleDiff > 0.5) {
+        interp.className = "callout warn-box";
+        interp.innerHTML = `<strong>Pressão sobre o giro:</strong> Alongar o ciclo em <strong>${fmtNum(res.cycleDiff)} dias</strong> eleva a NCG em <strong>${fmtSignedBRL(res.ncgDelta)}</strong>, reduz o Saldo de Tesouraria em <strong>${fmtSignedBRL(res.stDelta)}</strong> e altera o caixa mínimo em <strong>${fmtSignedBRL(res.minCashDelta)}</strong> (folga estimada de <strong>${fmtSignedBRL(res.simFolga)}</strong>).`;
+      } else {
+        interp.className = "callout";
+        interp.innerHTML = `<strong>Cenário próximo ao realizado em ${base.year}:</strong> Ciclo de <strong>${fmtNum(res.simCycle)} dias</strong>, NCG de <strong>${fmtBRL(res.simNcg)}</strong>, ST de <strong>${fmtBRL(res.simSt)}</strong> e caixa mínimo de <strong>${fmtBRL(res.simMinCash)}</strong> (folga de <strong>${fmtSignedBRL(res.simFolga)}</strong>).`;
+      }
+    }
+
+    yearSelect.addEventListener("change", loadYearIntoSliders);
+    [pmreSlider, pmrvSlider, pmpcSlider, disbSlider].forEach(el => el.addEventListener("input", updateSimulator));
+    document.getElementById("resetSimBtn").addEventListener("click", loadYearIntoSliders);
+    document.getElementById("presetPreBtn").addEventListener("click", () => {
+      pmreSlider.value = "66.7";
+      updateSimulator();
+    });
+
+    // Aba 3: Desafio CFO parametrizado por ano
+    const challengeYearSelect = document.getElementById("challengeYear");
+    const challengeOptions = document.getElementById("challengeOptions");
+
+    DATA.forEach(d => {
+      const opt = document.createElement("option");
+      opt.value = d.year;
+      opt.textContent = `${d.year} (${d.phase})`;
+      if (d.year === 2022) opt.selected = true;
+      challengeYearSelect.appendChild(opt);
+    });
+
+    function renderChallengeOptions() {
+      const base = DATA.find(d => d.year === Number(challengeYearSelect.value)) || DATA.find(d => d.year === 2022);
+      const issue = [
+        base.pmre >= 100 ? "estoques elevados" : null,
+        base.pmrv >= 70 ? "recebimentos lentos" : null,
+        base.folgaCaixa < 0 ? "folga de caixa negativa" : null,
+        base.pmpc < 40 ? "prazo curto com fornecedores" : null
+      ].filter(Boolean);
+
+      document.getElementById("challengeTitle").textContent = `Missão CFO: Recuperar Liquidez de ${base.year}`;
+      document.getElementById("challengeContext").innerHTML =
+        `Em ${base.year}, o ciclo financeiro foi de <strong>${fmtNum(base.cicloFin)} dias</strong>, a NCG de <strong>${fmtBRL(base.ncg)}</strong>, a folga de caixa de <strong>${fmtSignedBRL(base.folgaCaixa)}</strong> e o caixa operacional de <strong>${fmtBRL(base.cxOpInd)}</strong>. Principais sinais: ${issue.join(", ") || "ciclo e liquidez próximos da referência histórica"} <strong>Selecione medidas e avalie os trade-offs.</strong>`;
+      document.getElementById("challengeScoreTitle").textContent = `Placar da Decisão (${base.year})`;
+
+      const reducePmre = Math.min(20, Math.max(8, base.pmre * 0.12));
+      const reducePmrv = Math.min(15, Math.max(6, base.pmrv * 0.10));
+      const extendPmpc = Math.min(12, Math.max(5, base.pmpc * 0.12));
+      const actionData = [
+        { title: `Reduzir PMRE em ${fmtNum(reducePmre, 0)} dias`, sub: "Programação de compras, giro de estoques e tratamento de itens parados.", pmre: -reducePmre, pmrv: 0, pmpc: 0, risk: 1 },
+        { title: `Reduzir PMRV em ${fmtNum(reducePmrv, 0)} dias`, sub: "Cobrança preventiva, limites de crédito e monitoramento de vencimentos.", pmre: 0, pmrv: -reducePmrv, pmpc: 0, risk: 2 },
+        { title: `Alongar PMPC em ${fmtNum(extendPmpc, 0)} dias`, sub: "Negociação acordada com fornecedores estratégicos.", pmre: 0, pmrv: 0, pmpc: extendPmpc, risk: 2 },
+        { title: "Ação combinada de giro", sub: "Reduzir estoque e recebíveis em conjunto, sem alterar significativamente os fornecedores.", pmre: -reducePmre * 0.5, pmrv: -reducePmrv * 0.5, pmpc: 0, risk: 3 }
+      ];
+
+      challengeOptions.innerHTML = actionData.map((a, i) => `
+        <div class="decision-card">
+          <div>
+            <strong>${i + 1}. ${a.title}</strong>
+            <div class="kpi-sub">${a.sub}</div>
+          </div>
+          <input type="checkbox" class="challenge-opt" data-pmre="${a.pmre}" data-pmrv="${a.pmrv}" data-pmpc="${a.pmpc}" data-risk="${a.risk}" />
+        </div>
+      `).join("");
+      document.querySelectorAll(".challenge-opt").forEach(chk => chk.addEventListener("change", updateChallenge));
+      updateChallenge();
+    }
+
+    function updateChallenge() {
+      const base = DATA.find(d => d.year === Number(challengeYearSelect.value)) || DATA.find(d => d.year === 2022);
+      let pmreDelta = 0, pmrvDelta = 0, pmpcDelta = 0, riskScore = 0, selectedCount = 0;
+
+      document.querySelectorAll(".challenge-opt").forEach(chk => {
+        if (chk.checked) {
+          selectedCount++;
+          pmreDelta += Number(chk.dataset.pmre);
+          pmrvDelta += Number(chk.dataset.pmrv);
+          pmpcDelta += Number(chk.dataset.pmpc);
+          riskScore += Number(chk.dataset.risk);
+        }
+      });
+
+      const res = calcScenarioFromBase(
+        base,
+        Math.max(10, base.pmre + pmreDelta),
+        Math.max(10, base.pmrv + pmrvDelta),
+        Math.max(10, base.pmpc + pmpcDelta),
+        0
+      );
+      const cashGain = res.ncgDelta <= 0 ? -res.ncgDelta : 0;
+      const finalCash = base.cxOpInd + cashGain;
+      const riskText = riskScore <= 1 ? "Baixo" : riskScore <= 3 ? "Moderado" : "Elevado";
+
+      document.getElementById("chalCash").textContent = fmtBRL(finalCash, 1);
+      document.getElementById("chalCashGain").textContent = `${fmtSignedBRL(cashGain, 1)} de alívio estimado`;
+      document.getElementById("chalCashGain").className = "delta " + (cashGain > 0 ? "pos" : "");
+      document.getElementById("chalCycle").textContent = `${fmtNum(res.simCycle)} dias`;
+      const riskEl = document.getElementById("chalRiskLabel");
+      riskEl.textContent = `Risco operacional: ${riskText}`;
+      riskEl.className = "delta " + (riskScore >= 4 ? "neg" : riskScore >= 2 ? "warn" : "pos");
+
+      const fb = document.getElementById("chalFeedback");
+      if (selectedCount === 0) {
+        fb.className = "callout warn-box";
+        fb.innerHTML = `Em ${base.year}, o caixa operacional ficou em ${fmtBRL(base.cxOpInd)} e a folga em ${fmtSignedBRL(base.folgaCaixa)}. Selecione ações para equilibrar liquidez e risco operacional.`;
+      } else if (riskScore >= 5) {
+        fb.className = "callout warn-box";
+        fb.innerHTML = `<strong>Atenção ao excesso de pressão:</strong> a combinação pode liberar ${fmtBRL(cashGain, 1)}, mas elevar o risco operacional. Preserve fornecimento, produção e vendas.`;
+      } else {
+        fb.className = "callout ok-box";
+        fb.innerHTML = `<strong>Estratégia equilibrada:</strong> o ciclo passa para ${fmtNum(res.simCycle)} dias, a NCG para ${fmtBRL(res.simNcg)}, o ST para ${fmtBRL(res.simSt)} e a folga estimada fica em ${fmtSignedBRL(res.simFolga)}. Risco ${riskText.toLowerCase()}.`;
+      }
+    }
+
+    challengeYearSelect.addEventListener("change", renderChallengeOptions);
+
+    // Aba 5: Problemas Pré-Definidos ligados aos dados reais do Excel
+    const PREDEFINED_PROBLEMS = [
+      {
+        id: "estoque_alto",
+        title: "1. Excesso de estoques e giro lento (Foco: PMRE)",
+        sub: "Simula redução de 12 dias no PMRE por controle de itens parados/baixo giro e programação de compras.",
+        tags: ["PMRE", "Estoques"],
+        dPmre: -12.0, dPmrv: 0.0, dPmpc: 0.0, disbPct: 0.0,
+        actions: [
+          "Classificar itens por criticidade e giro (MP, WIP e produtos acabados) e definir estoques mínimo, máximo e de segurança.",
+          "Tratar itens parados/obsoletos e alinhar compras e produção à demanda firme sem gerar falta de componentes críticos."
+        ],
+        risk: "Reduzir estoques sem critério por item pode causar ruptura e parada de linha."
+      },
+      {
+        id: "atraso_clientes",
+        title: "2. Atraso de clientes e pressão no recebimento (Foco: PMRV)",
+        sub: "Simula redução de 8 dias no PMRV via cobrança preventiva, revisão de crédito e monitoramento de vencimentos.",
+        tags: ["PMRV", "Recebíveis e Crédito"],
+        dPmre: 0.0, dPmrv: -8.0, dPmpc: 0.0, disbPct: 0.0,
+        actions: [
+          "Acompanhar vencimentos e faixas de atraso por cliente, reforçando cobrança preventiva e critérios de crédito.",
+          "Avaliar políticas de pagamento e antecipação apenas quando o custo financeiro for vantajoso."
+        ],
+        risk: "Endurecer limites de crédito de forma excessiva pode retrair vendas a prazo."
+      },
+      {
+        id: "prazo_fornecedores",
+        title: "3. Prazo curto com fornecedores (Foco: PMPC)",
+        sub: "Simula alongamento de +6 dias no PMPC por negociação sustentável com fornecedores estratégicos.",
+        tags: ["PMPC", "Fornecedores"],
+        dPmre: 0.0, dPmrv: 0.0, dPmpc: 6.0, disbPct: 0.0,
+        actions: [
+          "Negociar prazos de pagamento alinhados ao ciclo de recebimento com fornecedores estratégicos.",
+          "Consolidar compras quando houver ganho real de negociação, evitando excesso de estoque."
+        ],
+        risk: "Esticar pagamentos sem acordo formal pode prejudicar abastecimento e parcerias."
+      },
+      {
+        id: "lucro_sem_caixa",
+        title: "4. Lucro alto com baixa conversão em caixa / folga apertada (Foco: Liquidez, NCG e ST)",
+        sub: "Simula redução combinada de 7 dias no PMRE e 5 dias no PMRV com −3% nos desembolsos previstos.",
+        tags: ["NCG", "Saldo de Tesouraria", "Caixa Mínimo"],
+        dPmre: -7.0, dPmrv: -5.0, dPmpc: 0.0, disbPct: -3.0,
+        actions: [
+          "Monitorar a conversão Caixa Operacional ÷ Lucro Líquido, a razão NCG ÷ Receita Líquida e a folga frente ao Caixa Mínimo.",
+          "Manter projeção semanal/mensal de fluxo de caixa e reserva mínima de liquidez para absorver variações."
+        ],
+        risk: "Avaliar apenas o lucro contábil sem acompanhar NCG, ST e desembolsos pode gerar aperto de caixa."
+      },
+      {
+        id: "combinado_giro",
+        title: "5. Ciclo longo combinado: estoque elevado + atraso de recebíveis (Foco: PMRE e PMRV)",
+        sub: "Simula redução de 10 dias no PMRE e 6 dias no PMRV para aliviar NCG e elevar o Saldo de Tesouraria.",
+        tags: ["PMRE", "PMRV", "NCG", "ST"],
+        dPmre: -10.0, dPmrv: -6.0, dPmpc: 0.0, disbPct: 0.0,
+        actions: [
+          "Atuar simultaneamente no giro de estoques (PMRE) e na agilidade de cobrança/crédito (PMRV).",
+          "Acompanhar o deslocamento entre NCG e Saldo de Tesouraria (ST) mantendo CGL saudável."
+        ],
+        risk: "Executar cortes simultâneos sem controle de produção e crédito pode afetar o nível de serviço."
+      }
+    ];
+
+    const stratYearSelect = document.getElementById("stratBaseYear");
+    const problemListEl = document.getElementById("predefinedProblemsList");
+    const problemSolutionBox = document.getElementById("problemSolutionBox");
+
+    DATA.forEach(d => {
+      const opt = document.createElement("option");
+      opt.value = d.year;
+      opt.textContent = `${d.year} (${d.phase}) — Ciclo: ${fmtNum(d.cicloFin)}d | NCG: ${fmtBRL(d.ncg)} | ST: ${fmtBRL(d.st)} | Folga: ${fmtSignedBRL(d.folgaCaixa)}`;
+      if (d.year === 2025) opt.selected = true;
+      stratYearSelect.appendChild(opt);
+    });
+
+    problemListEl.innerHTML = PREDEFINED_PROBLEMS.map((p, idx) => `
+      <label class="problem-option">
+        <input type="radio" name="predefinedProblem" value="${p.id}" ${idx === 0 ? "checked" : ""} />
+        <span>
+          <span class="problem-title">${p.title}</span>
+          <span class="problem-sub">${p.sub}</span>
+        </span>
+      </label>
+    `).join("");
+
+    function getSelectedProblem() {
+      const checked = document.querySelector('input[name="predefinedProblem"]:checked');
+      const id = checked ? checked.value : PREDEFINED_PROBLEMS[0].id;
+      return PREDEFINED_PROBLEMS.find(p => p.id === id) || PREDEFINED_PROBLEMS[0];
+    }
+
+    function getProblemAdjustments(prob) {
+      const pmreInput = document.getElementById("problemPmre");
+      const pmrvInput = document.getElementById("problemPmrv");
+      const pmpcInput = document.getElementById("problemPmpc");
+      const disbInput = document.getElementById("problemDisb");
+
+      return {
+        dPmre: pmreInput ? -Math.max(0, Number(pmreInput.value) || 0) : prob.dPmre,
+        dPmrv: pmrvInput ? -Math.max(0, Number(pmrvInput.value) || 0) : prob.dPmrv,
+        dPmpc: pmpcInput ? Math.max(0, Number(pmpcInput.value) || 0) : prob.dPmpc,
+        disbPct: disbInput ? -Math.max(0, Number(disbInput.value) || 0) : prob.disbPct
+      };
+    }
+
+    function renderProblemAdjustments(prob) {
+      const fields = document.getElementById("problemAdjustmentFields");
+      let html = "";
+
+      if (prob.dPmre !== 0) {
+        html += `<label>Redução do PMRE (dias)
+          <input id="problemPmre" type="number" min="0" max="60" step="1" value="${Math.abs(prob.dPmre)}" />
+        </label>`;
+      }
+      if (prob.dPmrv !== 0) {
+        html += `<label>Redução do PMRV (dias)
+          <input id="problemPmrv" type="number" min="0" max="60" step="1" value="${Math.abs(prob.dPmrv)}" />
+        </label>`;
+      }
+      if (prob.dPmpc !== 0) {
+        html += `<label>Alongamento do PMPC (dias)
+          <input id="problemPmpc" type="number" min="0" max="60" step="1" value="${Math.abs(prob.dPmpc)}" />
+        </label>`;
+      }
+      if (prob.disbPct !== 0) {
+        html += `<label>Desembolsos (%)
+          <input id="problemDisb" type="number" min="0" max="50" step="1" value="${Math.abs(prob.disbPct)}" />
+        </label>`;
+      }
+
+      fields.innerHTML = html || "<span class=\"kpi-sub\">Este problema não possui ajuste numérico adicional.</span>";
+      fields.querySelectorAll("input").forEach(input => input.addEventListener("input", renderProblemResolution));
+    }
+
+    function renderStrategyCards(base, prob) {
+      const adjustments = getProblemAdjustments(prob);
+
+      const stockActive = prob.id === "estoque_alto" || prob.id === "combinado_giro";
+      const receivableActive = prob.id === "atraso_clientes" || prob.id === "combinado_giro";
+      const supplierActive = prob.id === "prazo_fornecedores";
+      const cashActive = prob.id === "lucro_sem_caixa";
+
+      document.getElementById("strategyStockFocus").innerHTML =
+        `<strong>Foco: PMRE</strong>${stockActive ? ` • Ajuste selecionado: ${Math.abs(adjustments.dPmre)} dias` : " • Não é o foco principal"}`;
+      document.getElementById("strategyStockList").innerHTML = stockActive ? `
+        <li>Revisar itens parados e obsoletos com inventário ABC/criticidade.</li>
+        <li>Alinhar compras e produção à previsão de demanda para o ano ${base.year}.</li>
+        <li>Reduzir o PMRE para cerca de ${fmtNum(Math.max(10, base.pmre + adjustments.dPmre))} dias.</li>
+        <li>Acompanhar rupturas e nível de serviço por categoria de estoque.</li>
+      ` : `
+        <li>Manter metas mínimas, máximas e estoques de segurança por criticidade.</li>
+        <li>Revisar programação de compras e produção periodicamente.</li>
+      `;
+      document.getElementById("strategyStockRisk").innerHTML =
+        stockActive
+          ? `<strong>Risco do ajuste:</strong> redução de ${Math.abs(adjustments.dPmre)} dias pode causar ruptura se não considerar componentes críticos.`
+          : `<strong>Risco do ajuste:</strong> reduzir estoques indiscriminadamente pode provocar ruptura e atrasos na produção.`;
+
+      document.getElementById("strategyReceivableFocus").innerHTML =
+        `<strong>Foco: PMRV</strong>${receivableActive ? ` • Ajuste selecionado: ${Math.abs(adjustments.dPmrv)} dias` : " • Não é o foco principal"}`;
+      document.getElementById("strategyReceivableList").innerHTML = receivableActive ? `
+        <li>Monitorar carteira vencida e clientes críticos semanalmente.</li>
+        <li>Reforçar cobrança preventiva e revisar limites de crédito.</li>
+        <li>Reduzir o PMRV para cerca de ${fmtNum(Math.max(10, base.pmrv + adjustments.dPmrv))} dias.</li>
+        <li>Medir perda de vendas antes de endurecer condições comerciais.</li>
+      ` : `
+        <li>Monitorar vencimentos e atrasos por cliente.</li>
+        <li>Revisar limites de crédito e critérios de concessão.</li>
+      `;
+      document.getElementById("strategyReceivableRisk").innerHTML =
+        receivableActive
+          ? `<strong>Risco do ajuste:</strong> reduzir o PMRV em ${Math.abs(adjustments.dPmrv)} dias pode afastar clientes se o crédito ficar excessivamente restritivo.`
+          : `<strong>Risco do ajuste:</strong> endurecer o crédito pode afastar clientes ou reduzir vendas.`;
+
+      document.getElementById("strategySupplierFocus").innerHTML =
+        `<strong>Foco: PMPC</strong>${supplierActive ? ` • Ajuste selecionado: ${Math.abs(adjustments.dPmpc)} dias` : " • Não é o foco principal"}`;
+      document.getElementById("strategySupplierList").innerHTML = supplierActive ? `
+        <li>Negociar prazos sustentáveis por categoria de fornecedor.</li>
+        <li>Elevar o PMPC para cerca de ${fmtNum(Math.max(10, base.pmpc + adjustments.dPmpc))} dias.</li>
+        <li>Formalizar acordos sem comprometer fornecedores críticos.</li>
+        <li>Priorizar fornecedores com maior impacto na continuidade operacional.</li>
+      ` : `
+        <li>Negociar prazos compatíveis com o recebimento dos clientes.</li>
+        <li>Evitar atrasos que prejudiquem fornecimento ou reputação.</li>
+      `;
+      document.getElementById("strategySupplierRisk").innerHTML =
+        supplierActive
+          ? `<strong>Risco do ajuste:</strong> alongar ${Math.abs(adjustments.dPmpc)} dias pode comprometer o fornecimento sem acordo formal.`
+          : `<strong>Risco do ajuste:</strong> alongar pagamentos sem acordo pode comprometer fornecedores e continuidade de abastecimento.`;
+
+      document.getElementById("strategyCashFocus").innerHTML =
+        `<strong>Foco: liquidez e ST</strong>${cashActive ? ` • Ajuste selecionado: ${Math.abs(adjustments.disbPct)}% nos desembolsos` : " • Monitoramento geral"}`;
+      document.getElementById("strategyCashList").innerHTML = cashActive ? `
+        <li>Projetar caixa semanalmente considerando desembolsos ajustados em ${Math.abs(adjustments.disbPct)}%.</li>
+        <li>Monitorar NCG ÷ Receita, ST e caixa mínimo em ${base.year}.</li>
+        <li>Definir reserva mínima com base na folha de pagamento e compromissos críticos.</li>
+        <li>Revisar cenários de atraso de vendas e aumento de custos.</li>
+      ` : `
+        <li>Projetar entradas e saídas semanalmente e mensalmente.</li>
+        <li>Estabelecer reserva mínima de liquidez com critérios definidos.</li>
+      `;
+      document.getElementById("strategyCashBenefit").innerHTML =
+        cashActive
+          ? `<strong>Benefício esperado:</strong> antecipar o aperto de caixa e medir o efeito da redução de ${Math.abs(adjustments.disbPct)}% nos desembolsos.`
+          : `<strong>Benefício esperado:</strong> antecipar períodos de pressão financeira e tomar decisões antes que falte caixa.`;
+
+      const pmreAction = adjustments.dPmre !== 0 ? `Reduzir PMRE em ${Math.abs(adjustments.dPmre)} dias` : "Monitorar PMRE";
+      const pmrvAction = adjustments.dPmrv !== 0 ? `Reduzir PMRV em ${Math.abs(adjustments.dPmrv)} dias` : "Monitorar PMRV";
+      const pmpcAction = adjustments.dPmpc !== 0 ? `Alongar PMPC em ${Math.abs(adjustments.dPmpc)} dias` : "Revisar PMPC";
+      const cashAction = adjustments.disbPct !== 0 ? `Reduzir desembolsos em ${Math.abs(adjustments.disbPct)}%` : "Manter reserva de caixa";
+
+      document.getElementById("actionPlanBody").innerHTML = `
+        <tr><td>30 dias</td><td>${prob.id === "estoque_alto" || prob.id === "combinado_giro" ? pmreAction : prob.id === "atraso_clientes" ? pmrvAction : prob.id === "prazo_fornecedores" ? pmpcAction : cashAction}</td><td>${stockActive ? "PMRE" : receivableActive ? "PMRV" : supplierActive ? "PMPC" : "NCG, ST e caixa mínimo"}</td><td>Gerar alívio imediato e medir impacto operacional</td></tr>
+        <tr><td>60 dias</td><td>Revisar crédito, compras, cobrança e fornecedores</td><td>PMRE, PMRV e PMPC</td><td>Consolidar o ajuste escolhido no ano ${base.year}</td></tr>
+        <tr><td>90 dias</td><td>Validar caixa mínimo, folga e reserva de liquidez</td><td>NCG, ST e fluxo de caixa</td><td>Estabelecer rotina permanente de gestão</td></tr>
+      `;
+    }
+
+    function renderManagementPlan(base, prob) {
+      const el = document.getElementById("managementPlan");
+      if (!el) return;
+      const adjustments = getProblemAdjustments(prob);
+
+      let area = "PMRE, PMRV, PMPC e projeção de caixa";
+      let action = "Criar painel mensal com tendências dos indicadores e responsáveis por desvio.";
+      let target = "Reduzir a pressão sobre NCG sem comprometer a operação.";
+
+      if (prob.id === "estoque_alto" || (prob.id === "combinado_giro")) {
+        area = "PMRE, estoque e planejamento de materiais";
+        action = "Executar revisão semanal de estoque por ABC/criticidade, definir limites e tratar itens parados.";
+        target = `Reduzir PMRE para aproximadamente ${fmtNum(Math.max(10, base.pmre + adjustments.dPmre))} dias.`;
+      } else if (prob.id === "atraso_clientes") {
+        area = "PMRV, crédito e cobrança";
+        action = "Classificar carteira por vencimento e cliente, revisar crédito e aplicar cobrança preventiva.";
+        target = `Reduzir PMRV para aproximadamente ${fmtNum(Math.max(10, base.pmrv + adjustments.dPmrv))} dias.`;
+      } else if (prob.id === "prazo_fornecedores") {
+        area = "PMPC e fornecedores";
+        action = "Renegociar prazos por categoria, priorizando parceiros estratégicos e acordo formal.";
+        target = `Elevar PMPC para aproximadamente ${fmtNum(Math.max(10, base.pmpc + adjustments.dPmpc))} dias.`;
+      } else if (prob.id === "lucro_sem_caixa") {
+        area = "NCG, ST, caixa mínimo e conversão caixa/lucro";
+        action = "Implantar projeção semanal de caixa e monitorar NCG ÷ Receita, ST e folga frente ao caixa mínimo.";
+        target = "Criar reserva de liquidez e reduzir a diferença entre lucro contábil e caixa operacional.";
+      }
+
+      el.className = "callout";
+      el.innerHTML = `<strong>Plano de gestão baseado no problema solucionado (${base.year})</strong>
+        <ul class="rec-list">
+          <li><strong>Área principal:</strong> ${area}</li>
+          <li><strong>Ação recorrente:</strong> ${action}</li>
+          <li><strong>Meta sugerida:</strong> ${target}</li>
+          <li><strong>Responsável sugerido:</strong> Financeiro/Tesouraria, Crédito-Cobrança e Suprimentos/Produção, com revisão mensal da diretoria.</li>
+        </ul>`;
+    }
+
+    function renderProblemResolution() {
+      const base = DATA.find(d => d.year === Number(stratYearSelect.value)) || DATA[DATA.length - 1];
+      const prob = getSelectedProblem();
+      const adjustments = getProblemAdjustments(prob);
+
+      const newPmre = Math.max(10, base.pmre + adjustments.dPmre);
+      const newPmrv = Math.max(10, base.pmrv + adjustments.dPmrv);
+      const newPmpc = Math.max(10, base.pmpc + adjustments.dPmpc);
+
+      const res = calcScenarioFromBase(base, newPmre, newPmrv, newPmpc, adjustments.disbPct);
+      const adjustmentSummary =
+        `${adjustments.dPmre !== 0 ? `PMRE ${fmtSignedNum(adjustments.dPmre, 1, " dias")}; ` : ""}` +
+        `${adjustments.dPmrv !== 0 ? `PMRV ${fmtSignedNum(adjustments.dPmrv, 1, " dias")}; ` : ""}` +
+        `${adjustments.dPmpc !== 0 ? `PMPC ${fmtSignedNum(adjustments.dPmpc, 1, " dias")}; ` : ""}` +
+        `${adjustments.disbPct !== 0 ? `Desembolsos ${adjustments.disbPct}%` : ""}`;
+
+      problemSolutionBox.className = "callout ok-box";
+      problemSolutionBox.innerHTML = `
+        <div class="tag-row">
+          ${prob.tags.map(t => `<span class="focus-tag">${t}</span>`).join("")}
+          <span class="focus-tag">Ano-Base: ${base.year}</span>
+        </div>
+        <strong>${prob.title}</strong>
+        <p style="margin-top:6px;">
+          Na base real de <strong>${base.year}</strong> (PMRE <strong>${fmtNum(base.pmre)}d</strong>, PMRV <strong>${fmtNum(base.pmrv)}d</strong>, PMPC <strong>${fmtNum(base.pmpc)}d</strong>, Ciclo <strong>${fmtNum(base.cicloFin)}d</strong>, NCG <strong>${fmtBRL(base.ncg)}</strong>, ST <strong>${fmtBRL(base.st)}</strong>, Caixa Mínimo <strong>${fmtBRL(base.caixaMin)}</strong> e Folga de Caixa <strong>${fmtSignedBRL(base.folgaCaixa)}</strong>), a simulação projeta:
+        </p>
+        <p><strong>Valores informados nesta simulação:</strong> ${adjustmentSummary || "sem alteração pré-definida"}</p>
+        <ul class="rec-list">
+          <li><strong>Ciclo Financeiro:</strong> de ${fmtNum(base.cicloFin)} dias para <strong>${fmtNum(res.simCycle)} dias</strong> (${fmtSignedNum(res.cycleDiff, 1, " dias")}).</li>
+          <li><strong>NCG e Saldo de Tesouraria:</strong> NCG de <strong>${fmtBRL(res.simNcg)}</strong> (${fmtSignedBRL(res.ncgDelta)}) e ST de <strong>${fmtBRL(res.simSt)}</strong> (${fmtSignedBRL(res.stDelta)}).</li>
+          <li><strong>Caixa Mínimo e Folga:</strong> Caixa mínimo de <strong>${fmtBRL(res.simMinCash)}</strong> (${fmtSignedBRL(res.minCashDelta)}) e folga projetada de <strong>${fmtSignedBRL(res.simFolga)}</strong> vs. caixa real de ${fmtBRL(base.caixaReal)}.</li>
+          ${prob.actions.map(a => `<li>${a}</li>`).join("")}
+        </ul>
+        <div><strong>Risco do ajuste:</strong> ${prob.risk}</div>
+      `;
+      renderStrategyCards(base, prob);
+      renderManagementPlan(base, prob);
+    }
+
+    document.getElementById("applyProblemBtn").addEventListener("click", renderProblemResolution);
+    document.getElementById("resetProblemBtn").addEventListener("click", () => {
+      const firstRadio = document.querySelector('input[name="predefinedProblem"]');
+      if (firstRadio) firstRadio.checked = true;
+      renderProblemAdjustments(PREDEFINED_PROBLEMS[0]);
+      renderProblemResolution();
+    });
+    document.querySelectorAll('input[name="predefinedProblem"]').forEach(radio => {
+      radio.addEventListener("change", () => {
+        renderProblemAdjustments(getSelectedProblem());
+        renderProblemResolution();
+      });
+    });
+    stratYearSelect.addEventListener("change", renderProblemResolution);
+
+    // Init
+    renderDiagnostico();
+    loadYearIntoSliders();
+    renderChallengeOptions();
+    renderProblemAdjustments(PREDEFINED_PROBLEMS[0]);
+    renderProblemResolution();
+  </script>
+</body>
+</html>
