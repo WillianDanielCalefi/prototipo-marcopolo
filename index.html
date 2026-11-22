@@ -728,7 +728,6 @@
 
           <div class="btn-row">
             <button type="button" class="btn btn-outline" id="resetSimBtn">Restaurar Ano-Base</button>
-            <button type="button" class="btn btn-primary" id="presetPreBtn">Cenário: PMRE Média Pré (66,7d)</button>
           </div>
         </div>
 
@@ -855,7 +854,6 @@
             </div>
 
             <div class="btn-row">
-              <button type="button" class="btn btn-primary" id="applyProblemBtn">Calcular Resolução do Problema</button>
               <button type="button" class="btn btn-outline" id="resetProblemBtn">Selecionar Problema Padrão</button>
             </div>
           </div>
@@ -1006,197 +1004,77 @@
   <script>
     // Dados reais extraídos de Marcopolo_base_calculos_2017_2025.xlsx
     // Valores monetários convertidos de R$ mil para R$ milhões (÷ 1000), base 360 dias.
-    const DATA = [
-      {
-        year: 2017, phase: "Pré",
-        caixaEquiv: 946.698, cdbCirc: 187.373, derivAtivo: 0.445,
-        clientesCirc: 558.154, clientesNc: 15.673, estoques: 521.364, outrasRecCirc: 291.596,
-        fornecedores: 366.399, empCirc: 647.130, arrendCirc: 0.0, derivPassivo: 2.811,
-        outrasPagCirc: 408.619, divMinPagar: 15.325,
-        acIndRep: 2505.630, pcIndRep: 1424.959,
-        recLiqInd: 2840.440, cpvInd: -2472.347, despVendasInd: -154.905, despAdmInd: -151.033,
-        outrasRecDespInd: -80.014, deprAmortInd: 45.166, lucroLiqInd: 79.311, cxOpInd: 134.412,
-        estInicial: 472.057,
-        pmrv: 72.72736500366141, pmre: 75.91613758101109, compras: 2521.654,
-        pmpc: 52.30838172088636, cicloOp: 148.6435025846725, cicloFin: 96.33512086378614,
-        aco: 1371.114, acf: 1134.516, pco: 759.693, pcf: 665.266,
-        ncg: 611.421, st: 469.250, cgl: 1080.671, ncgPctRec: 0.21525573502696765,
-        convCxLucro: 1.6947460000000002, outrasOpLucro: -1.0088638398204536,
-        desembolsos: 2733.119, giroCaixa: 3.7369548653411867, caixaMin: 731.3759876161449,
-        caixaReal: 1134.071, folgaCaixa: 402.6950123838551,
-        vencidoPct: 0.15845053496383804, vencido90Pct: 0.09811579108369325,
-        coberturaPdd: 0.5524221906587421, pddPctCart: 0.08753159163577302,
-        estPaPct: 0.22334659029300586, estWipPct: 0.2243526180388966, estMpPct: 0.5523007916680976
-      },
-      {
-        year: 2018, phase: "Pré",
-        caixaEquiv: 833.839, cdbCirc: 89.928, derivAtivo: 1.453,
-        clientesCirc: 860.481, clientesNc: 16.645, estoques: 686.821, outrasRecCirc: 267.900,
-        fornecedores: 418.037, empCirc: 658.884, arrendCirc: 0.0, derivPassivo: 0.048,
-        outrasPagCirc: 570.841, divMinPagar: 34.753,
-        acIndRep: 2740.422, pcIndRep: 1647.810,
-        recLiqInd: 4155.112, cpvInd: -3533.152, despVendasInd: -214.964, despAdmInd: -162.335,
-        outrasRecDespInd: -26.573, deprAmortInd: 60.521, lucroLiqInd: 199.468, cxOpInd: 120.961,
-        estInicial: 521.364,
-        pmrv: 75.99443769506093, pmre: 69.98157735642282, compras: 3698.609,
-        pmpc: 40.68917260516048, cicloOp: 145.97601505148375, cicloFin: 105.28684244632327,
-        aco: 1815.202, acf: 925.220, pco: 954.125, pcf: 693.685,
-        ncg: 861.077, st: 231.535, cgl: 1092.612, ncgPctRec: 0.20723316242739065,
-        convCxLucro: 0.6064180720717107, outrasOpLucro: -0.13321936350692843,
-        desembolsos: 3849.930, giroCaixa: 3.419230607314671, caixaMin: 1125.9638033827557,
-        caixaReal: 923.767, folgaCaixa: -202.19680338275573,
-        vencidoPct: 0.19576022190832016, vencido90Pct: 0.08418408545273855,
-        coberturaPdd: 0.47864771490321666, pddPctCart: 0.09370018307065823,
-        estPaPct: 0.22337618681420383, estWipPct: 0.22423151034791008, estMpPct: 0.5523923028378861
-      },
-      {
-        year: 2019, phase: "Pré",
-        caixaEquiv: 1057.258, cdbCirc: 98.314, derivAtivo: 1.849,
-        clientesCirc: 570.099, clientesNc: 0.0, estoques: 552.691, outrasRecCirc: 208.274,
-        fornecedores: 377.527, empCirc: 415.835, arrendCirc: 13.593, derivPassivo: 0.548,
-        outrasPagCirc: 511.481, divMinPagar: 16.958,
-        acIndRep: 2488.485, pcIndRep: 1305.391,
-        recLiqInd: 4276.782, cpvInd: -3664.255, despVendasInd: -204.405, despAdmInd: -170.065,
-        outrasRecDespInd: -17.486, deprAmortInd: 86.148, lucroLiqInd: 206.891, cxOpInd: 645.039,
-        estInicial: 686.821,
-        pmrv: 47.98834731347074, pmre: 54.299919083142414, compras: 3530.125,
-        pmpc: 38.499968131439964, cicloOp: 102.28826639661316, cicloFin: 63.78829826517319,
-        aco: 1331.064, acf: 1157.421, pco: 858.457, pcf: 446.934,
-        ncg: 472.607, st: 710.487, cgl: 1183.094, ncgPctRec: 0.110505281774942,
-        convCxLucro: 3.1177721602196326, outrasOpLucro: -0.08451793456457748,
-        desembolsos: 3952.577, giroCaixa: 5.643668381515241, caixaMin: 700.3558237059668,
-        caixaReal: 1155.572, folgaCaixa: 455.2161762940332,
-        vencidoPct: 0.11388287433678924, vencido90Pct: 0.07692694997216176,
-        coberturaPdd: 0.9017921789999999, pddPctCart: 0.10269870761192725,
-        estPaPct: 0.18407731887324256, estWipPct: 0.20088090963487312, estMpPct: 0.6150417714918844
-      },
-      {
-        year: 2020, phase: "Pandemia",
-        caixaEquiv: 989.248, cdbCirc: 0.0, derivAtivo: 2.641,
-        clientesCirc: 702.407, clientesNc: 0.0, estoques: 748.411, outrasRecCirc: 379.187,
-        fornecedores: 358.825, empCirc: 503.673, arrendCirc: 18.371, derivPassivo: 5.723,
-        outrasPagCirc: 616.790, divMinPagar: 0.092,
-        acIndRep: 2821.894, pcIndRep: 1485.011,
-        recLiqInd: 3491.945, cpvInd: -2943.337, despVendasInd: -191.595, despAdmInd: -164.578,
-        outrasRecDespInd: 2.929, deprAmortInd: 95.781, lucroLiqInd: 84.760, cxOpInd: 191.563,
-        estInicial: 552.691,
-        pmrv: 72.41422759808645, pmre: 91.53827798175999, compras: 3139.057,
-        pmpc: 41.15153053942633, cicloOp: 163.95250557984645, cicloFin: 122.80097504042012,
-        aco: 1830.005, acf: 991.889, pco: 957.152, pcf: 527.859,
-        ncg: 872.853, st: 464.030, cgl: 1336.883, ncgPctRec: 0.24996184075064182,
-        convCxLucro: 2.260063709296838, outrasOpLucro: 0.03455639452571968,
-        desembolsos: 3203.729, giroCaixa: 2.9315726386532645, caixaMin: 1092.836319546241,
-        caixaReal: 989.248, folgaCaixa: -103.58831954624107,
-        vencidoPct: 0.15132590922362133, vencido90Pct: 0.09885053823499543,
-        coberturaPdd: 0.6174895246563794, pddPctCart: 0.09344216512643445,
-        estPaPct: 0.31709567919933505, estWipPct: 0.15665581437317008, estMpPct: 0.5262485064274949
-      },
-      {
-        year: 2021, phase: "Pandemia",
-        caixaEquiv: 1279.679, cdbCirc: 0.0, derivAtivo: 0.683,
-        clientesCirc: 411.051, clientesNc: 27.380, estoques: 987.614, outrasRecCirc: 362.078,
-        fornecedores: 459.049, empCirc: 691.958, arrendCirc: 19.661, derivPassivo: 0.921,
-        outrasPagCirc: 662.307, divMinPagar: 71.401,
-        acIndRep: 3041.105, pcIndRep: 1814.235,
-        recLiqInd: 3413.386, cpvInd: -3101.684, despVendasInd: -183.033, despAdmInd: -190.322,
-        outrasRecDespInd: 257.462, deprAmortInd: 105.221, lucroLiqInd: 350.107, cxOpInd: 83.731,
-        estInicial: 748.411,
-        pmrv: 46.24006778020417, pmre: 114.62837606925786, compras: 3340.887,
-        pmpc: 49.46517197379019, cicloOp: 160.86844384946203, cicloFin: 111.40327187567184,
-        aco: 1760.743, acf: 1280.362, pco: 1030.294, pcf: 783.941,
-        ncg: 730.449, st: 496.421, cgl: 1226.870, ncgPctRec: 0.2139954285861605,
-        convCxLucro: 0.23915831445815137, outrasOpLucro: 0.7353808978398033,
-        desembolsos: 3369.818, giroCaixa: 3.2315031797236324, caixaMin: 1042.8020069635675,
-        caixaReal: 1279.679, folgaCaixa: 236.87699303643252,
-        vencidoPct: 0.1453391429628722, vencido90Pct: 0.0927784244200167,
-        coberturaPdd: 0.8761106866062657, pddPctCart: 0.12733307100183637,
-        estPaPct: 0.22533158262734525, estWipPct: 0.15739246148772924, estMpPct: 0.6172759558849255
-      },
-      {
-        year: 2022, phase: "Pós",
-        caixaEquiv: 1114.967, cdbCirc: 0.0, derivAtivo: 0.598,
-        clientesCirc: 980.577, clientesNc: 101.375, estoques: 1338.351, outrasRecCirc: 347.899,
-        fornecedores: 653.253, empCirc: 563.884, arrendCirc: 15.110, derivPassivo: 0.975,
-        outrasPagCirc: 868.727, divMinPagar: 84.179,
-        acIndRep: 3782.392, pcIndRep: 2086.839,
-        recLiqInd: 5312.481, cpvInd: -4533.926, despVendasInd: -223.565, despAdmInd: -225.442,
-        outrasRecDespInd: -49.633, deprAmortInd: 119.436, lucroLiqInd: 421.391, cxOpInd: 4.856,
-        estInicial: 987.614,
-        pmrv: 73.31842692698571, pmre: 106.26688657909282, compras: 4884.663,
-        pmpc: 48.144785013827975, cicloOp: 179.58531350607853, cicloFin: 131.44052849225055,
-        aco: 2666.827, acf: 1115.565, pco: 1422.691, pcf: 664.148,
-        ncg: 1244.136, st: 451.417, cgl: 1695.553, ncgPctRec: 0.23419114346008954,
-        convCxLucro: 0.011523739235057227, outrasOpLucro: -0.11778372105716544,
-        desembolsos: 4863.497, giroCaixa: 2.7388814820438683, caixaMin: 1775.723930315206,
-        caixaReal: 1114.967, folgaCaixa: -660.7569303152061,
-        vencidoPct: 0.1717202055517751, vencido90Pct: 0.05791377019603549,
-        coberturaPdd: 0.4226418761140414, pddPctCart: 0.07257614984109107,
-        estPaPct: 0.31290864266398047, estWipPct: 0.12963363810545697, estMpPct: 0.5574577192305626
-      },
-      {
-        year: 2023, phase: "Pós",
-        caixaEquiv: 1486.554, cdbCirc: 0.0, derivAtivo: 0.063,
-        clientesCirc: 905.927, clientesNc: 0.0, estoques: 1618.848, outrasRecCirc: 349.164,
-        fornecedores: 793.849, empCirc: 481.946, arrendCirc: 17.515, derivPassivo: 0.657,
-        outrasPagCirc: 842.427, divMinPagar: 34.227,
-        acIndRep: 4360.556, pcIndRep: 2118.879,
-        recLiqInd: 6539.149, cpvInd: -5067.163, despVendasInd: -335.585, despAdmInd: -283.451,
-        outrasRecDespInd: -65.107, deprAmortInd: 145.910, lucroLiqInd: 782.550, cxOpInd: 1194.111,
-        estInicial: 1338.351,
-        pmrv: 49.87402795073182, pmre: 115.01208861842416, compras: 5347.660,
-        pmpc: 53.44124345975623, cicloOp: 164.886116569156, cicloFin: 111.44487310939977,
-        aco: 2873.939, acf: 1486.617, pco: 1584.534, pcf: 534.345,
-        ncg: 1289.405, st: 952.272, cgl: 2241.677, ncgPctRec: 0.19718238565905136,
-        convCxLucro: 1.5259229442208166, outrasOpLucro: -0.08319851766660277,
-        desembolsos: 5540.289, giroCaixa: 3.230296712832702, caixaMin: 1715.1021831231072,
-        caixaReal: 1486.554, folgaCaixa: -228.54818312310715,
-        vencidoPct: 0.11223948848387424, vencido90Pct: 0.07410356087431103,
-        coberturaPdd: 0.6502693604231764, pddPctCart: 0.07298589008034354,
-        estPaPct: 0.21540975382756578, estWipPct: 0.1784819209973243, estMpPct: 0.6061083251751099
-      },
-      {
-        year: 2024, phase: "Pós",
-        caixaEquiv: 2044.850, cdbCirc: 0.0, derivAtivo: 5.170,
-        clientesCirc: 975.310, clientesNc: 0.0, estoques: 1828.739, outrasRecCirc: 266.278,
-        fornecedores: 679.346, empCirc: 815.290, arrendCirc: 26.861, derivPassivo: 0.633,
-        outrasPagCirc: 1191.993, divMinPagar: 2.600,
-        acIndRep: 5120.347, pcIndRep: 2687.262,
-        recLiqInd: 8400.935, cpvInd: -6352.497, despVendasInd: -356.678, despAdmInd: -355.502,
-        outrasRecDespInd: -19.629, deprAmortInd: 167.152, lucroLiqInd: 1187.299, cxOpInd: 1472.817,
-        estInicial: 1618.848,
-        pmrv: 41.79434789103832, pmre: 103.63578369261724, compras: 6562.388,
-        pmpc: 37.26762270076076, cicloOp: 145.43013158365556, cicloFin: 108.1625088828948,
-        aco: 3070.327, acf: 2050.020, pco: 1841.878, pcf: 845.384,
-        ncg: 1228.449, st: 1204.636, cgl: 2433.085, ncgPctRec: 0.1462276520411121,
-        convCxLucro: 1.2404771250123178, outrasOpLucro: -0.016532482550730692,
-        desembolsos: 6897.525, giroCaixa: 3.3283251073869546, caixaMin: 2072.371147462735,
-        caixaReal: 2044.850, folgaCaixa: -27.52114746273495,
-        vencidoPct: 0.122536988920462, vencido90Pct: 0.04604031704549693,
-        coberturaPdd: 0.4463721644209449, pddPctCart: 0.0546971264045897,
-        estPaPct: 0.20133709583804425, estWipPct: 0.24471988565788557, estMpPct: 0.5539430185040702
-      },
-      {
-        year: 2025, phase: "Pós",
-        caixaEquiv: 2179.202, cdbCirc: 0.0, derivAtivo: 0.145,
-        clientesCirc: 995.716, clientesNc: 1.192, estoques: 1771.089, outrasRecCirc: 360.338,
-        fornecedores: 595.686, empCirc: 753.078, arrendCirc: 25.730, derivPassivo: 10.664,
-        outrasPagCirc: 1296.216, divMinPagar: 4.800,
-        acIndRep: 5306.490, pcIndRep: 2655.644,
-        recLiqInd: 8796.837, cpvInd: -6589.675, despVendasInd: -420.826, despAdmInd: -441.477,
-        outrasRecDespInd: 18.780, deprAmortInd: 156.041, lucroLiqInd: 1193.312, cxOpInd: 1449.579,
-        estInicial: 1828.739,
-        pmrv: 40.79725587731136, pmre: 96.7562201474276, compras: 6532.025,
-        pmpc: 32.83008714755302, cicloOp: 137.55347602473896, cicloFin: 104.72338887718594,
-        aco: 3127.143, acf: 2179.347, pco: 1861.372, pcf: 794.272,
-        ncg: 1265.771, st: 1385.075, cgl: 2650.846, ncgPctRec: 0.1438893314722104,
-        convCxLucro: 1.214752721836368, outrasOpLucro: 0.015737711512161113,
-        desembolsos: 7295.937, giroCaixa: 3.437627392784839, caixaMin: 2122.3751791290437,
-        caixaReal: 2179.202, folgaCaixa: 56.82682087095628,
-        vencidoPct: 0.07614922000799999, vencido90Pct: 0.04386769628771226,
-        coberturaPdd: 0.6720465359555264, pddPctCart: 0.05117582015328621,
-        estPaPct: 0.26340363869000185, estWipPct: 0.2117347597994816, estMpPct: 0.5248616015105166
+    let DATA = [];
+
+    // Converte as abas do JSON exportado da planilha para o formato usado pela interface.
+    function buildAppData(workbook) {
+      const sheets = Object.fromEntries(workbook.sheets.map(sheet => [sheet.name, sheet]));
+      const dataSheet = sheets.Dados;
+      const indicatorsSheet = sheets.Indicadores;
+      const yearColumns = ["B", "C", "D", "E", "F", "G", "H", "I", "J"];
+      const cell = (sheet, rowNumber, column) => {
+        const row = sheet.rows.find(item => item.row === rowNumber);
+        const value = row?.cells?.[column];
+        return value && typeof value === "object" && "value" in value ? value.value : value;
+      };
+      const rawRows = {
+        caixaEquiv: 6, cdbCirc: 7, derivAtivo: 8, clientesCirc: 9, clientesNc: 10,
+        estoques: 11, outrasRecCirc: 12, fornecedores: 13, empCirc: 14, arrendCirc: 15,
+        derivPassivo: 16, outrasPagCirc: 17, divMinPagar: 18, acIndRep: 19, pcIndRep: 20,
+        recLiqInd: 27, cpvInd: 28, despVendasInd: 29, despAdmInd: 30,
+        outrasRecDespInd: 31, deprAmortInd: 32, lucroLiqInd: 33, cxOpInd: 34, estInicial: 45
+      };
+      const indicatorRows = {
+        pmrv: 6, pmre: 7, compras: 8, pmpc: 9, cicloOp: 10, cicloFin: 11,
+        aco: 14, acf: 15, pco: 16, pcf: 17, ncg: 18, st: 19, cgl: 20,
+        ncgPctRec: 21, convCxLucro: 26, outrasOpLucro: 27, desembolsos: 30,
+        giroCaixa: 31, caixaMin: 32, caixaReal: 33, folgaCaixa: 34,
+        vencidoPct: 39, vencido90Pct: 40, coberturaPdd: 41, pddPctCart: 42,
+        estPaPct: 45, estWipPct: 46, estMpPct: 47
+      };
+      const moneyFields = new Set([
+        "caixaEquiv", "cdbCirc", "derivAtivo", "clientesCirc", "clientesNc", "estoques",
+        "outrasRecCirc", "fornecedores", "empCirc", "arrendCirc", "derivPassivo",
+        "outrasPagCirc", "divMinPagar", "acIndRep", "pcIndRep", "recLiqInd", "cpvInd",
+        "despVendasInd", "despAdmInd", "outrasRecDespInd", "deprAmortInd", "lucroLiqInd",
+        "cxOpInd", "estInicial", "compras", "aco", "acf", "pco", "pcf", "ncg", "st",
+        "cgl", "desembolsos", "caixaMin", "caixaReal", "folgaCaixa"
+      ]);
+
+      return yearColumns.map((column, index) => {
+        const sourcePhase = cell(dataSheet, 3, column);
+        const row = {
+          year: Number(cell(dataSheet, 4, column)),
+          phase: sourcePhase === "Pré-pandemia" ? "Pré" : sourcePhase === "Pós-pandemia" ? "Pós" : "Pandemia"
+        };
+        for (const [field, rowNumber] of Object.entries(rawRows)) {
+          row[field] = Number(cell(dataSheet, rowNumber, column)) / 1000;
+        }
+        for (const [field, rowNumber] of Object.entries(indicatorRows)) {
+          const value = Number(cell(indicatorsSheet, rowNumber, column));
+          row[field] = moneyFields.has(field) ? value / 1000 : value;
+        }
+        return row;
+      });
+    }
+
+    function populateYearOptions() {
+      const selects = [yearSelect, challengeYearSelect, stratYearSelect];
+      for (const select of selects) {
+        select.replaceChildren();
+        for (const item of DATA) {
+          const option = document.createElement("option");
+          option.value = item.year;
+          option.textContent = select === yearSelect
+            ? `${item.year} (${item.phase}) — Ciclo: ${fmtNum(item.cicloFin)}d | NCG: ${fmtBRL(item.ncg)} | ST: ${fmtBRL(item.st)}`
+            : select === stratYearSelect
+              ? `${item.year} (${item.phase}) — Ciclo: ${fmtNum(item.cicloFin)}d | NCG: ${fmtBRL(item.ncg)} | ST: ${fmtBRL(item.st)} | Folga: ${fmtSignedBRL(item.folgaCaixa)}`
+              : `${item.year} (${item.phase})`;
+          if (item.year === Number(select.dataset.defaultYear || (select === challengeYearSelect ? 2022 : 2025))) option.selected = true;
+          select.appendChild(option);
+        }
       }
-    ];
+    }
 
     const fmtNum = (n, dec = 1) => {
       const clean = Math.abs(n) < (0.5 / Math.pow(10, dec)) ? 0 : n;
@@ -1290,9 +1168,9 @@
       const comparisonBody = document.getElementById("comparisonBody");
       if (comparisonBody) {
         const periods = [
-          { label: "Pré-pandemia", years: [2017, 2018, 2019] },
-          { label: "Durante a pandemia", years: [2020, 2021] },
-          { label: "Pós-pandemia", years: [2022, 2023, 2024, 2025] }
+          { label: "2017–2019 (pré-pandemia)", years: [2017, 2018, 2019] },
+          { label: "2020–2021 (durante)", years: [2020, 2021] },
+          { label: "2022–2025 (pós-pandemia)", years: [2022, 2023, 2024, 2025] }
         ];
         const avg = (rows, field) => rows.reduce((sum, row) => sum + row[field], 0) / rows.length;
         const periodRows = periods.map(period => {
@@ -1331,11 +1209,11 @@
         const during = periodRows[1];
         const post = periodRows[2];
         document.getElementById("periodPreRead").innerHTML =
-          `<strong>Pré-pandemia — Média 2017–2019:</strong> PMRV de ${fmtNum(pre.pmrv)} dias, PMRE de ${fmtNum(pre.pmre)} dias, ciclo de ${fmtNum(pre.cicloFin)} dias, NCG de ${fmtBRL(pre.ncg)} e folga média de ${fmtSignedBRL(pre.folgaCaixa)}.`;
+          `<strong>Pré-pandemia:</strong> PMRV de ${fmtNum(pre.pmrv)} dias, PMRE de ${fmtNum(pre.pmre)} dias, ciclo de ${fmtNum(pre.cicloFin)} dias, NCG de ${fmtBRL(pre.ncg)} e folga de ${fmtSignedBRL(pre.folgaCaixa)}.`;
         document.getElementById("periodDuringRead").innerHTML =
-          `<strong>Durante a pandemia — Média 2020–2021:</strong> ciclo médio de ${fmtNum(during.cicloFin)} dias, PMRE elevado a ${fmtNum(during.pmre)} dias e NCG média de ${fmtBRL(during.ncg)}.`;
+          `<strong>Durante a pandemia:</strong> ciclo de ${fmtNum(during.cicloFin)} dias, PMRE elevado a ${fmtNum(during.pmre)} dias e NCG de ${fmtBRL(during.ncg)}.`;
         document.getElementById("periodPostRead").innerHTML =
-          `<strong>Pós-pandemia — Média 2022–2025:</strong> PMRV de ${fmtNum(post.pmrv)} dias, PMRE de ${fmtNum(post.pmre)} dias, ciclo de ${fmtNum(post.cicloFin)} dias, ST de ${fmtBRL(post.st)} e folga média de ${fmtSignedBRL(post.folgaCaixa)}.`;
+          `<strong>Pós-pandemia:</strong> PMRV de ${fmtNum(post.pmrv)} dias, PMRE de ${fmtNum(post.pmre)} dias, ciclo de ${fmtNum(post.cicloFin)} dias, ST de ${fmtBRL(post.st)} e folga de ${fmtSignedBRL(post.folgaCaixa)}.`;
       }
     }
 
@@ -1450,7 +1328,7 @@
     yearSelect.addEventListener("change", loadYearIntoSliders);
     [pmreSlider, pmrvSlider, pmpcSlider, disbSlider].forEach(el => el.addEventListener("input", updateSimulator));
     document.getElementById("resetSimBtn").addEventListener("click", loadYearIntoSliders);
-    document.getElementById("presetPreBtn").addEventListener("click", () => {
+    document.getElementById("presetPreBtn")?.addEventListener("click", () => {
       pmreSlider.value = "66.7";
       updateSimulator();
     });
@@ -1847,7 +1725,6 @@
       renderManagementPlan(base, prob);
     }
 
-    document.getElementById("applyProblemBtn").addEventListener("click", renderProblemResolution);
     document.getElementById("resetProblemBtn").addEventListener("click", () => {
       const firstRadio = document.querySelector('input[name="predefinedProblem"]');
       if (firstRadio) firstRadio.checked = true;
@@ -1862,12 +1739,25 @@
     });
     stratYearSelect.addEventListener("change", renderProblemResolution);
 
-    // Init
-    renderDiagnostico();
-    loadYearIntoSliders();
-    renderChallengeOptions();
-    renderProblemAdjustments(PREDEFINED_PROBLEMS[0]);
-    renderProblemResolution();
+    // Carrega os dados do arquivo exportado da planilha antes de renderizar as abas.
+    fetch("./Marcopolo_base_calculos_2017_2025.json")
+      .then(response => {
+        if (!response.ok) throw new Error(`Falha ao carregar o JSON (${response.status})`);
+        return response.json();
+      })
+      .then(workbook => {
+        DATA = buildAppData(workbook);
+        populateYearOptions();
+        renderDiagnostico();
+        loadYearIntoSliders();
+        renderChallengeOptions();
+        renderProblemAdjustments(PREDEFINED_PROBLEMS[0]);
+        renderProblemResolution();
+      })
+      .catch(error => {
+        console.error("Não foi possível carregar a base de dados:", error);
+        document.querySelector(".footer-note").textContent = "Não foi possível carregar os dados. Abra o protótipo por um servidor local ou pela hospedagem do repositório.";
+      });
   </script>
 </body>
 </html>
