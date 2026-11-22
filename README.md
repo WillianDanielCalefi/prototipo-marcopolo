@@ -9,7 +9,9 @@ Protótipo interativo para análise do capital de giro da Marcopolo entre 2017 e
 - desafio CFO;
 - conceitos e indicadores;
 - estratégias de gestão;
-- comparativo entre os períodos pré-pandemia, durante a pandemia e pós-pandemia.
+- comparativo entre os períodos pré-pandemia, durante a pandemia e pós-pandemia, com capital de giro próprio e análise de saldo médio;
+- giros operacionais e ciclo econômico;
+- fluxo de caixa anual por atividades operacionais, investimentos e financiamento.
 
 Os valores monetários são apresentados em reais milhões. Os indicadores usam ano-base de 360 dias. A base considera o segmento industrial; dados de aging e composição dos estoques são consolidados, conforme as premissas da planilha.
 

@@ -282,6 +282,15 @@
       background: var(--success);
     }
 
+    .flow-bar-list { display: flex; flex-direction: column; gap: 8px; }
+    .flow-bar-row { display: grid; grid-template-columns: 40px minmax(80px, 1fr) 94px; align-items: center; gap: 8px; font-size: 12px; }
+    .flow-bar-row.flow-selected { grid-template-columns: 150px minmax(80px, 1fr) 100px; }
+    .flow-track { height: 14px; position: relative; border-radius: 5px; background: #f1f5f9; }
+    .flow-track::before { content: ""; position: absolute; left: 50%; top: -3px; bottom: -3px; width: 1px; background: #94a3b8; }
+    .flow-bar { position: absolute; top: 2px; height: 10px; border-radius: 4px; }
+    .flow-bar.positive { left: 50%; background: var(--success); }
+    .flow-bar.negative { right: 50%; background: var(--danger); }
+
     /* Simulator */
     .sim-layout {
       display: grid;
@@ -593,7 +602,7 @@
       </div>
       <h1>Capital de Giro, Ciclos e Caixa Mínimo da Marcopolo</h1>
       <p class="subtitle">
-        Protótipo interativo alinhado à planilha <em>Marcopolo_base_calculos_2017_2025.xlsx</em> (segmento industrial em R$ milhões, base 360 dias, com indicadores consolidados de aging e estoques).
+        Protótipo interativo alinhado à planilha-base atualizada (2017–2025), com dados do segmento industrial em R$ milhões e ano-base de 360 dias.
       </p>
       <div class="tabs" role="tablist">
         <button class="tab-btn active" data-tab="diagnostico">1. Diagnóstico (2017–2025)</button>
@@ -602,6 +611,7 @@
         <button class="tab-btn" data-tab="conceitos">4. Conceitos e Indicadores</button>
         <button class="tab-btn" data-tab="estrategias">5. Estratégias de Gestão</button>
         <button class="tab-btn" data-tab="comparativo">6. Comparativo e Conclusão</button>
+        <button class="tab-btn" data-tab="fluxoCaixa">7. Fluxo de Caixa</button>
       </div>
     </div>
   </header>
@@ -677,6 +687,17 @@
               </tr>
             </thead>
             <tbody id="historyBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Giros e ciclo econômico</h2>
+        <p class="desc">Giros anuais de recebíveis, estoques e fornecedores, além do ciclo econômico calculado pela planilha.</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Ano</th><th>Giro de recebíveis</th><th>Giro de estoques</th><th>Giro de fornecedores</th><th>Ciclo econômico</th></tr></thead>
+            <tbody id="turnoverBody"></tbody>
           </table>
         </div>
       </div>
@@ -959,7 +980,7 @@
     <section id="comparativo" class="tab-panel">
       <div class="card">
         <h2>Comparativo dos períodos da pandemia (Dados Reais)</h2>
-        <p class="desc">Pré-pandemia: 2017–2019 • Durante a pandemia: 2020–2021 • Pós-pandemia: 2022–2025.</p>
+        <p class="desc">Pré-pandemia: 2017–2019 • Durante a pandemia: 2020–2021 • Pós-pandemia: 2022–2025. Os valores da tabela são médias de cada período.</p>
         <div class="table-wrap">
           <table>
             <thead>
@@ -969,13 +990,28 @@
                 <th>PMRE</th>
                 <th>PMPC</th>
                 <th>Ciclo Financeiro</th>
+                <th>Ciclo Econômico</th>
                 <th>NCG</th>
                 <th>ST</th>
                 <th>Cx. Mín.</th>
                 <th>Folga Cx.</th>
+                <th>CGP</th>
+                <th>CGP/CGL</th>
+                <th>CGL/Receita</th>
               </tr>
             </thead>
             <tbody id="comparisonBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Sensibilidade: saldo final e saldo médio</h2>
+        <p class="desc">Compara os prazos calculados com os saldos finais (análise principal) aos prazos com saldo médio. A diferença mostra o impacto dessa escolha no ciclo financeiro.</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Ano</th><th>PMRV médio</th><th>PMRE médio</th><th>PMPC médio</th><th>Ciclo financeiro médio</th><th>Diferença vs. saldo final</th></tr></thead>
+            <tbody id="averageBalanceBody"></tbody>
           </table>
         </div>
       </div>
@@ -990,14 +1026,48 @@
 
         <div class="card">
           <h2>Conclusão e transparência dos dados</h2>
-          <p>Todos os valores desta versão refletem exatamente a planilha <em>Marcopolo_base_calculos_2017_2025.xlsx</em> (segmento industrial em R$ milhões, base 360 dias, com indicadores consolidados de aging/carteira e composição de estoques).</p>
+          <p>Os indicadores desta versão vêm da planilha-base atualizada. A análise usa o segmento industrial; aging da carteira e composição dos estoques são consolidados.</p>
           <p><strong>Premissas importantes da planilha:</strong> saldos finais (não médias), 360 dias, <em>Compras = (−CPV) − Estoque inicial + Estoque final</em>, <em>Outras contas a receber</em> tratadas como ACO, dividendos a pagar e arrendamento circulante tratados como PCF, e efeitos específicos como créditos tributários/venda de imóvel em 2021, incorporação da Ciferal/impairment em 2023 e consolidação da Metalsur/Loma e hiperinflação em 2024–2025.</p>
         </div>
       </div>
     </section>
 
+    <!-- ABA 7: FLUXO DE CAIXA -->
+    <section id="fluxoCaixa" class="tab-panel">
+      <div class="card">
+        <h2>Fluxo de caixa do segmento industrial</h2>
+        <p class="desc">Origem e uso do caixa por ano, em R$ milhões. Valores negativos representam saídas; nos gráficos, barras à esquerda do eixo central são negativas. Selecione um ano para destacar seus principais componentes.</p>
+        <div class="control-group" style="max-width:240px">
+          <label for="cashFlowYear" class="kpi-label">Ano</label>
+          <select id="cashFlowYear"></select>
+        </div>
+        <div class="kpi-grid">
+          <div class="card"><div class="kpi-label">Caixa operacional (CFO)</div><div class="kpi-value" id="cashFlowCfo">—</div></div>
+          <div class="card"><div class="kpi-label">Investimentos (CFI)</div><div class="kpi-value" id="cashFlowCfi">—</div></div>
+          <div class="card"><div class="kpi-label">Financiamento (CFF)</div><div class="kpi-value" id="cashFlowCff">—</div></div>
+          <div class="card"><div class="kpi-label">Variação líquida de caixa</div><div class="kpi-value" id="cashFlowChange">—</div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Composição do fluxo no ano selecionado</h2>
+        <p class="desc">As barras se atualizam ao trocar o ano. À direita do eixo central estão valores positivos; à esquerda, negativos.</p>
+        <div id="cashFlowSelectedChart" class="flow-bar-list"></div>
+      </div>
+
+      <div class="card">
+        <h2>Série anual de origens e usos</h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Ano</th><th>CFO</th><th>CFI</th><th>CFF</th><th>Efeito cambial</th><th>Variação de caixa</th><th>Caixa livre</th><th>Capex</th><th>Captação líquida</th><th>Juros</th><th>Dividendos/JCP</th><th>Arrendamentos</th><th>Outros</th><th>Dividendos/lucro</th></tr></thead>
+            <tbody id="cashFlowHistoryBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
     <div class="footer-note">
-      Protótipo educacional (HTML/CSS/JS puro) vinculado aos dados reais da planilha Marcopolo_base_calculos_2017_2025.xlsx (valores em R$ milhões, base 360 dias).
+      Protótipo educacional em HTML, CSS e JavaScript, alimentado pelo JSON da planilha (valores em R$ milhões, base 360 dias).
     </div>
   </main>
 
@@ -1030,7 +1100,14 @@
         ncgPctRec: 21, convCxLucro: 26, outrasOpLucro: 27, desembolsos: 30,
         giroCaixa: 31, caixaMin: 32, caixaReal: 33, folgaCaixa: 34,
         vencidoPct: 39, vencido90Pct: 40, coberturaPdd: 41, pddPctCart: 42,
-        estPaPct: 45, estWipPct: 46, estMpPct: 47
+        estPaPct: 45, estWipPct: 46, estMpPct: 47,
+        giroRecebiveis: 50, giroEstoques: 51, giroFornecedores: 52, cicloEcon: 53,
+        plIndustrial: 56, ancIndustrial: 57, cgp: 58, cgpPctCgl: 59, cglPctRec: 60,
+        cfo: 64, cfi: 65, cff: 66, efeitoCambial: 67, variacaoCaixa: 68,
+        caixaLivre: 69, capex: 70, captacaoLiquida: 71, jurosPagos: 72,
+        dividendosPagos: 73, arrendamentosPagos: 74, outrosFluxos: 75,
+        payoutDividendos: 76, pmrvSaldoMedio: 79, pmreSaldoMedio: 80,
+        pmpcSaldoMedio: 81, cicloFinSaldoMedio: 82, diferencaCicloMedio: 83
       };
       const moneyFields = new Set([
         "caixaEquiv", "cdbCirc", "derivAtivo", "clientesCirc", "clientesNc", "estoques",
@@ -1038,7 +1115,10 @@
         "outrasPagCirc", "divMinPagar", "acIndRep", "pcIndRep", "recLiqInd", "cpvInd",
         "despVendasInd", "despAdmInd", "outrasRecDespInd", "deprAmortInd", "lucroLiqInd",
         "cxOpInd", "estInicial", "compras", "aco", "acf", "pco", "pcf", "ncg", "st",
-        "cgl", "desembolsos", "caixaMin", "caixaReal", "folgaCaixa"
+        "cgl", "desembolsos", "caixaMin", "caixaReal", "folgaCaixa", "plIndustrial",
+        "ancIndustrial", "cgp", "cfo", "cfi", "cff", "efeitoCambial", "variacaoCaixa",
+        "caixaLivre", "capex", "captacaoLiquida", "jurosPagos", "dividendosPagos",
+        "arrendamentosPagos", "outrosFluxos"
       ]);
 
       return yearColumns.map((column, index) => {
@@ -1059,7 +1139,7 @@
     }
 
     function populateYearOptions() {
-      const selects = [yearSelect, challengeYearSelect, stratYearSelect];
+      const selects = [yearSelect, challengeYearSelect, stratYearSelect, cashFlowYearSelect];
       for (const select of selects) {
         select.replaceChildren();
         for (const item of DATA) {
@@ -1069,6 +1149,8 @@
             ? `${item.year} (${item.phase}) — Ciclo: ${fmtNum(item.cicloFin)}d | NCG: ${fmtBRL(item.ncg)} | ST: ${fmtBRL(item.st)}`
             : select === stratYearSelect
               ? `${item.year} (${item.phase}) — Ciclo: ${fmtNum(item.cicloFin)}d | NCG: ${fmtBRL(item.ncg)} | ST: ${fmtBRL(item.st)} | Folga: ${fmtSignedBRL(item.folgaCaixa)}`
+            : select === cashFlowYearSelect
+              ? `${item.year}`
               : `${item.year} (${item.phase})`;
           if (item.year === Number(select.dataset.defaultYear || (select === challengeYearSelect ? 2022 : 2025))) option.selected = true;
           select.appendChild(option);
@@ -1165,6 +1247,16 @@
         `;
       }).join("");
 
+      document.getElementById("turnoverBody").innerHTML = DATA.map(d => `
+        <tr>
+          <td><strong>${d.year}</strong></td>
+          <td>${fmtNum(d.giroRecebiveis, 2)}x</td>
+          <td>${fmtNum(d.giroEstoques, 2)}x</td>
+          <td>${fmtNum(d.giroFornecedores, 2)}x</td>
+          <td>${fmtNum(d.cicloEcon)} dias</td>
+        </tr>
+      `).join("");
+
       const comparisonBody = document.getElementById("comparisonBody");
       if (comparisonBody) {
         const periods = [
@@ -1181,10 +1273,14 @@
             pmre: avg(rows, "pmre"),
             pmpc: avg(rows, "pmpc"),
             cicloFin: avg(rows, "cicloFin"),
+            cicloEcon: avg(rows, "cicloEcon"),
             ncg: avg(rows, "ncg"),
             st: avg(rows, "st"),
             caixaMin: avg(rows, "caixaMin"),
-            folgaCaixa: avg(rows, "folgaCaixa")
+            folgaCaixa: avg(rows, "folgaCaixa"),
+            cgp: avg(rows, "cgp"),
+            cgpPctCgl: avg(rows, "cgpPctCgl"),
+            cglPctRec: avg(rows, "cglPctRec")
           };
         });
 
@@ -1197,13 +1293,28 @@
               <td>${fmtNum(d.pmre)}</td>
               <td>${fmtNum(d.pmpc)}</td>
               <td><strong>${fmtNum(d.cicloFin)}</strong></td>
+              <td>${fmtNum(d.cicloEcon)}</td>
               <td>${fmtBRL(d.ncg)}</td>
               <td>${fmtBRL(d.st)}</td>
               <td>${fmtBRL(d.caixaMin)}</td>
               <td class="${folgaCls}"><strong>${fmtSignedBRL(d.folgaCaixa)}</strong></td>
+              <td>${fmtSignedBRL(d.cgp)}</td>
+              <td>${fmtNum(d.cgpPctCgl * 100)}%</td>
+              <td>${fmtNum(d.cglPctRec * 100)}%</td>
             </tr>
           `;
         }).join("");
+
+        document.getElementById("averageBalanceBody").innerHTML = DATA.map(d => `
+          <tr>
+            <td><strong>${d.year}</strong></td>
+            <td>${fmtNum(d.pmrvSaldoMedio)} dias</td>
+            <td>${fmtNum(d.pmreSaldoMedio)} dias</td>
+            <td>${fmtNum(d.pmpcSaldoMedio)} dias</td>
+            <td>${fmtNum(d.cicloFinSaldoMedio)} dias</td>
+            <td>${fmtSignedNum(d.diferencaCicloMedio, 1, " dias")}</td>
+          </tr>
+        `).join("");
 
         const pre = periodRows[0];
         const during = periodRows[1];
@@ -1215,6 +1326,49 @@
         document.getElementById("periodPostRead").innerHTML =
           `<strong>Pós-pandemia:</strong> PMRV de ${fmtNum(post.pmrv)} dias, PMRE de ${fmtNum(post.pmre)} dias, ciclo de ${fmtNum(post.cicloFin)} dias, ST de ${fmtBRL(post.st)} e folga de ${fmtSignedBRL(post.folgaCaixa)}.`;
       }
+    }
+
+    function renderCashFlowDashboard() {
+      const selectedYear = Number(cashFlowYearSelect.value);
+      const selected = DATA.find(item => item.year === selectedYear);
+      if (!selected) return;
+
+      document.getElementById("cashFlowCfo").textContent = fmtSignedBRL(selected.cfo);
+      document.getElementById("cashFlowCfi").textContent = fmtSignedBRL(selected.cfi);
+      document.getElementById("cashFlowCff").textContent = fmtSignedBRL(selected.cff);
+      document.getElementById("cashFlowChange").textContent = fmtSignedBRL(selected.variacaoCaixa);
+      const selectedMetrics = [
+        ["CFO — atividades operacionais", selected.cfo],
+        ["CFI — atividades de investimento", selected.cfi],
+        ["CFF — atividades de financiamento", selected.cff],
+        ["Efeito cambial", selected.efeitoCambial],
+        ["Variação líquida de caixa", selected.variacaoCaixa],
+        ["Caixa livre", selected.caixaLivre]
+      ];
+      const maxValue = Math.max(...selectedMetrics.map(([, value]) => Math.abs(value)), 1);
+      document.getElementById("cashFlowSelectedChart").innerHTML = selectedMetrics.map(([label, value]) => {
+        const width = Math.min(Math.abs(value) / maxValue * 48, 48);
+        const signClass = value < 0 ? "negative" : "positive";
+        return `<div class="flow-bar-row flow-selected"><strong>${label}</strong><div class="flow-track"><span class="flow-bar ${signClass}" style="width:${width}%"></span></div><span>${fmtSignedBRL(value)}</span></div>`;
+      }).join("");
+      document.getElementById("cashFlowHistoryBody").innerHTML = DATA.map(item => `
+        <tr>
+          <td><strong>${item.year}</strong></td>
+          <td>${fmtSignedBRL(item.cfo)}</td>
+          <td>${fmtSignedBRL(item.cfi)}</td>
+          <td>${fmtSignedBRL(item.cff)}</td>
+          <td>${fmtSignedBRL(item.efeitoCambial)}</td>
+          <td><strong>${fmtSignedBRL(item.variacaoCaixa)}</strong></td>
+          <td>${fmtSignedBRL(item.caixaLivre)}</td>
+          <td>${fmtSignedBRL(item.capex)}</td>
+          <td>${fmtSignedBRL(item.captacaoLiquida)}</td>
+          <td>${fmtSignedBRL(item.jurosPagos)}</td>
+          <td>${fmtSignedBRL(item.dividendosPagos)}</td>
+          <td>${fmtSignedBRL(item.arrendamentosPagos)}</td>
+          <td>${fmtSignedBRL(item.outrosFluxos)}</td>
+          <td>${fmtNum(item.payoutDividendos * 100)}%</td>
+        </tr>
+      `).join("");
     }
 
     // Cálculo exato a partir das linhas reais da planilha (em R$ milhões, 360 dias)
@@ -1249,6 +1403,7 @@
 
     // Aba 2: Simulador
     const yearSelect = document.getElementById("baseYear");
+    const cashFlowYearSelect = document.getElementById("cashFlowYear");
     const pmreSlider = document.getElementById("pmreSlider");
     const pmrvSlider = document.getElementById("pmrvSlider");
     const pmpcSlider = document.getElementById("pmpcSlider");
@@ -1738,6 +1893,7 @@
       });
     });
     stratYearSelect.addEventListener("change", renderProblemResolution);
+    cashFlowYearSelect.addEventListener("change", renderCashFlowDashboard);
 
     // Carrega os dados do arquivo exportado da planilha antes de renderizar as abas.
     fetch("./Marcopolo_base_calculos_2017_2025.json")
@@ -1749,6 +1905,7 @@
         DATA = buildAppData(workbook);
         populateYearOptions();
         renderDiagnostico();
+        renderCashFlowDashboard();
         loadYearIntoSliders();
         renderChallengeOptions();
         renderProblemAdjustments(PREDEFINED_PROBLEMS[0]);
