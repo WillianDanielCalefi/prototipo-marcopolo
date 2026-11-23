@@ -20,6 +20,10 @@ const chartCurrencyFormat = new Intl.NumberFormat("pt-BR", {
   maximumFractionDigits: 2
 });
 const numberFormat = new Intl.NumberFormat("pt-BR");
+const compactNumberFormat = new Intl.NumberFormat("pt-BR", {
+  notation: "compact",
+  maximumFractionDigits: 1
+});
 const percentFormat = new Intl.NumberFormat("pt-BR", {
   minimumFractionDigits: 2,
   maximumFractionDigits: 2
@@ -41,26 +45,22 @@ function getElement(id) {
   return element;
 }
 
-function getApiError(status, payload) {
-  if (payload && typeof payload.message === "string" && payload.message.trim()) {
-    return payload.message;
-  }
-
+function getApiError(status) {
   const messages = {
-    401: "BRAPI_TOKEN ausente ou inválido no servidor. Configure a variável de ambiente e reinicie o servidor.",
-    403: "Seu plano da brapi não permite consultar esses dados.",
-    404: "A brapi não encontrou cotações para os ativos solicitados.",
-    429: "Limite de consultas atingido. Aguarde o prazo indicado pela brapi antes de tentar novamente."
+    401: "Não foi possível acessar as cotações no momento.",
+    403: "As cotações estão temporariamente indisponíveis.",
+    404: "Não encontramos cotações para os ativos selecionados.",
+    429: "Muitas consultas em sequência. Aguarde um pouco antes de tentar novamente."
   };
-  return messages[status] || `A brapi respondeu com erro HTTP ${status}.`;
+  return messages[status] || "Não foi possível carregar as cotações no momento.";
 }
 
 function getApiSetupError() {
   if (window.location.protocol === "file:") {
-    return "Abra o frontend pelo Live Server (http://127.0.0.1:5500); páginas file:// não podem acessar a API PHP por CORS.";
+    return "Não foi possível carregar as cotações. Abra a aplicação pelo endereço do site e tente novamente.";
   }
   if (!MARKET_API_BASE_URL) {
-    return "URL da API PHP não configurada. Defina market-api-base-url no index.html.";
+    return "Não foi possível carregar as cotações no momento. Tente novamente mais tarde.";
   }
   return "";
 }
@@ -73,7 +73,7 @@ async function requestBrapi(path) {
     });
   } catch (error) {
     console.error("Erro de rede ao consultar a API de mercado:", error);
-    throw new Error("Falha ao conectar à API de mercado. Verifique o servidor, a URL e a configuração de CORS.");
+    throw new Error("Não foi possível conectar às cotações. Verifique sua conexão e tente novamente.");
   }
 
   let payload;
@@ -81,11 +81,11 @@ async function requestBrapi(path) {
     payload = await response.json();
   } catch (error) {
     console.error("Resposta JSON inválida recebida do servidor de mercado:", error);
-    throw new Error("O servidor de mercado retornou uma resposta que não pôde ser lida.");
+    throw new Error("Não foi possível ler as cotações no momento.");
   }
 
   if (!response.ok) {
-    const apiError = new Error(getApiError(response.status, payload));
+    const apiError = new Error(getApiError(response.status));
     apiError.status = response.status;
     apiError.code = payload && typeof payload.code === "string" ? payload.code : "";
     apiError.retryAfter = response.headers.get("Retry-After");
@@ -93,7 +93,7 @@ async function requestBrapi(path) {
   }
 
   if (!payload || !Array.isArray(payload.results)) {
-    throw new Error("A resposta da brapi não contém a lista esperada de resultados.");
+    throw new Error("Não foi possível carregar as cotações no momento.");
   }
   return payload.results;
 }
@@ -221,7 +221,7 @@ export function initializeStocksTab() {
         return;
       }
       refreshButton.disabled = true;
-      setStatus(`Limite da brapi atingido. Aguarde ${remaining} s antes de tentar novamente.`, "warning");
+      setStatus(`Aguarde ${remaining} s antes de tentar novamente.`, "warning");
     };
     updateCountdown();
     retryTimer = window.setInterval(updateCountdown, 1000);
@@ -358,14 +358,26 @@ export function initializeStocksTab() {
       class: "market-chart-axis",
       x: margins.left,
       y: volumeTop - 8
-    }, "Volume"));
-    svg.appendChild(svgElement("line", {
-      class: "market-chart-grid",
-      x1: margins.left,
-      x2: width - margins.right,
-      y1: volumeTop,
-      y2: volumeTop
-    }));
+    }, "Volume (ações)"));
+
+    for (let index = 0; index <= 2; index += 1) {
+      const fraction = index / 2;
+      const y = volumeBottom - fraction * volumeHeight;
+      const value = volumeMaximum * fraction;
+      svg.appendChild(svgElement("line", {
+        class: "market-chart-grid",
+        x1: margins.left,
+        x2: width - margins.right,
+        y1: y,
+        y2: y
+      }));
+      svg.appendChild(svgElement("text", {
+        class: "market-chart-axis",
+        x: margins.left - 10,
+        y: y + 4,
+        "text-anchor": "end"
+      }, compactNumberFormat.format(value)));
+    }
 
     rows.forEach((row, index) => {
       const x = xForIndex(index);
@@ -435,7 +447,7 @@ export function initializeStocksTab() {
 
     chartContainer.replaceChildren(svg);
     chartDescription.textContent =
-      `${symbol} · ${rows.length} pregões · Candles mostram abertura, máxima, mínima e fechamento; barras inferiores mostram o volume.`;
+      `${symbol} · ${rows.length} pregões · Preços em reais; volume em ações negociadas.`;
   }
 
   function renderPerformanceComparison() {
@@ -606,10 +618,10 @@ export function initializeStocksTab() {
 
   function renderStatus(quoteMissing, historyMissing = [], historyError = "") {
     const updatedAt = lastQuoteUpdate ? marketTimeFormat.format(lastQuoteUpdate) : "—";
-    const messages = [`Cotação consultada em ${updatedAt}. Atualização automática a cada 15 minutos enquanto a página e a aba Ações estiverem visíveis.`];
-    if (quoteMissing.length) messages.push(`Sem cotação: ${quoteMissing.join(", ")}.`);
-    if (historyMissing.length) messages.push(`Sem histórico: ${historyMissing.join(", ")}.`);
-    if (historyError) messages.push(`Falha ao carregar o histórico: ${historyError}`);
+    const messages = [`Cotações atualizadas às ${updatedAt}.`];
+    if (quoteMissing.length) messages.push(`Cotação indisponível para ${quoteMissing.join(", ")}.`);
+    if (historyMissing.length) messages.push(`Histórico indisponível para ${historyMissing.join(", ")}.`);
+    if (historyError) messages.push("Não foi possível atualizar o histórico agora.");
     setStatus(messages.join(" "), quoteMissing.length || historyMissing.length || historyError ? "warning" : "");
   }
 
@@ -671,7 +683,7 @@ export function initializeStocksTab() {
     } catch (error) {
       console.error("Falha ao carregar histórico de mercado:", error);
       if (error.status === 429) applyRetryAfter(error.retryAfter);
-      setStatus(`Não foi possível atualizar o histórico: ${error.message}`, "error");
+      setStatus("Não foi possível atualizar o histórico agora. Tente novamente.", "error");
     } finally {
       setBusy(false);
     }

@@ -8,6 +8,48 @@ let DATA = [];
 initializeStocksTab();
 initializeMillerOrr();
 
+const headingIconPrefixes = [
+  ["serie historica completa", "table"],
+  ["giros e ciclo", "repeat"],
+  ["parametros de simulacao", "sliders"],
+  ["impacto calculado", "chart-no-axes-combined"],
+  ["missao cfo", "target"],
+  ["placar da decisao", "award"],
+  ["capital de giro: por que", "lightbulb"],
+  ["indicadores de prazo", "clock-3"],
+  ["indicadores de estrutura", "wallet"],
+  ["simulador de resolucao", "settings"],
+  ["estrategias para melhorar", "trending-up"],
+  ["plano de acao", "clipboard-list"],
+  ["comparativo dos periodos", "scale"],
+  ["sensibilidade: saldo", "sliders"],
+  ["leitura critica", "search"],
+  ["conclusao e transparencia", "badge-check"]
+];
+
+document.querySelectorAll("h2").forEach(heading => {
+  const icon = heading.querySelector("[data-lucide]");
+  if (icon) {
+    icon.classList.remove("icon-orange");
+    icon.classList.add("icon-blue");
+    heading.querySelector("span")?.classList.add("heading-label");
+    return;
+  }
+
+  const normalizedTitle = heading.textContent.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  const iconName = headingIconPrefixes.find(([prefix]) => normalizedTitle.startsWith(prefix))?.[1] || "circle-dot";
+  const iconElement = document.createElement("i");
+  iconElement.className = "heading-icon icon-blue";
+  iconElement.dataset.lucide = iconName;
+  iconElement.setAttribute("aria-hidden", "true");
+
+  const label = document.createElement("span");
+  label.className = "heading-label";
+  while (heading.firstChild) label.append(heading.firstChild);
+  heading.classList.add("section-heading");
+  heading.append(iconElement, label);
+});
+
 if (window.lucide) {
   window.lucide.createIcons({ attrs: { "stroke-width": 1.8 } });
 } else {
@@ -231,9 +273,32 @@ if (mobileNavToggle && mobileNavBackdrop && appTabs) {
   });
 }
 
-document.querySelectorAll(".tab-btn").forEach(btn => {
+const tabButtons = [...document.querySelectorAll(".tab-btn")];
+const savedTabId = (() => {
+  try {
+    return localStorage.getItem("marcopolo-active-tab");
+  } catch (error) {
+    console.error("Não foi possível recuperar a aba selecionada:", error);
+    return null;
+  }
+})();
+const savedTabButton = tabButtons.find(btn => btn.dataset.tab === savedTabId);
+
+if (savedTabButton) {
+  tabButtons.forEach(btn => {
+    btn.classList.remove("active");
+    btn.removeAttribute("aria-current");
+  });
+  document.querySelectorAll(".tab-panel").forEach(panel => panel.classList.remove("active"));
+  savedTabButton.classList.add("active");
+  savedTabButton.setAttribute("aria-current", "page");
+  document.getElementById(savedTabButton.dataset.tab)?.classList.add("active");
+  if (mobileNavCurrent) mobileNavCurrent.textContent = savedTabButton.textContent.trim();
+}
+
+tabButtons.forEach(btn => {
   btn.addEventListener("click", () => {
-    document.querySelectorAll(".tab-btn").forEach(b => {
+    tabButtons.forEach(b => {
       b.classList.remove("active");
       b.removeAttribute("aria-current");
     });
@@ -242,9 +307,16 @@ document.querySelectorAll(".tab-btn").forEach(btn => {
     btn.setAttribute("aria-current", "page");
     document.getElementById(btn.dataset.tab).classList.add("active");
     if (mobileNavCurrent) mobileNavCurrent.textContent = btn.textContent.trim();
+    try {
+      localStorage.setItem("marcopolo-active-tab", btn.dataset.tab);
+    } catch (error) {
+      console.error("Não foi possível salvar a aba selecionada:", error);
+    }
     setMobileNavOpen(false, true);
   });
 });
+
+if (savedTabButton?.dataset.tab === "acoes") savedTabButton.click();
 
 // Diagnóstico
 function renderDiagnostico() {
@@ -389,7 +461,7 @@ function renderCashFlowDashboard() {
   document.getElementById("cashFlowSelectedChart").innerHTML = selectedMetrics.map(([label, value]) => {
     const width = Math.min(Math.abs(value) / maxValue * 44, 44);
     const signClass = value < 0 ? "negative" : "positive";
-    const truck = value === 0 ? "" : `<svg class="flow-truck" viewBox="0 0 28 20" aria-hidden="true"><path class="truck-body" d="M1 4h15v11H1zM16 8h6l4 4v3H16z"/><path class="truck-window" d="M18 9h3.5l2.8 3H18z"/><circle class="truck-wheel" cx="7" cy="16" r="2.5"/><circle class="truck-wheel" cx="21" cy="16" r="2.5"/></svg>`;
+    const truck = value === 0 ? "" : `<svg class="flow-truck" viewBox="0 0 42 24" aria-hidden="true"><path class="truck-body" d="M2 4h22v13H2zM24 8h9l6 6v3H24z"/><path class="truck-window" d="M27 9h5l4 4H27z"/><path class="truck-detail" d="M5 6h16M5 8h16M5 10h16M5 12h16M5 14h16"/><path class="truck-highlight" d="M3 15h20v1.2H3zM25 15h13v1.2H25z"/><path class="truck-bumper" d="M2 17h3m32 0h3"/><circle class="truck-wheel" cx="9" cy="18" r="3.2"/><circle class="truck-hub" cx="9" cy="18" r="1.25"/><circle class="truck-wheel" cx="31" cy="18" r="3.2"/><circle class="truck-hub" cx="31" cy="18" r="1.25"/><path class="truck-light" d="M37 14h1.6v1.5H37z"/></svg>`;
     return `<div class="flow-bar-row flow-selected"><strong>${label}</strong><div class="flow-track"><span class="flow-bar ${signClass}" style="width:${width}%">${truck}</span></div><span>${fmtSignedBRL(value)}</span></div>`;
   }).join("");
   document.getElementById("cashFlowHistoryBody").innerHTML = DATA.map(item => `
@@ -471,6 +543,32 @@ function loadYearIntoSliders() {
   updateSimulator();
 }
 
+function updateSimulatorBus(cycleDiff) {
+  const isDark = document.documentElement.dataset.theme === "dark";
+  const state = cycleDiff < -0.5 ? "positive" : cycleDiff > 0.5 ? "warning" : "neutral";
+  const palette = {
+    light: {
+      positive: ["#15805f", "#b9ead9"],
+      warning: ["#d39421", "#f8dfa8"],
+      neutral: ["#4b9be8", "#c5e5ff"]
+    },
+    dark: {
+      positive: ["#4bc49b", "#b2f0dc"],
+      warning: ["#f4bf62", "#ffedbd"],
+      neutral: ["#8ab7e4", "#d8eaff"]
+    }
+  };
+  const [bodyColor, accentColor] = palette[isDark ? "dark" : "light"][state];
+  const appearance = `${isDark ? "dark" : "light"}-${state}`;
+  const busSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 24"><path d="M2 17V8q0-3 4-4l28-2q5 0 8 5l4 7v3H2z" fill="${bodyColor}" stroke="${accentColor}" stroke-width="1.2" stroke-linejoin="round"/><path d="M6 5l8-1v6H5V8q0-2 1-3zm10-1 7-.5v6.5h-7zm9-.6 7-.5v7.1h-7zm9-.3 1-.1q4 0 6 4l2 3h-9z" fill="#15202b" stroke="#aebdca" stroke-width=".5" stroke-linejoin="round"/><path d="M4 13q14 1 29 0v1.4Q17 16 4 14.4z" fill="${accentColor}"/><path d="M3 16h42v1H3z" fill="#111b25"/><path d="M43 13h3v1.5h-3z" fill="#fff0a6"/><circle cx="11" cy="18" r="3.2" fill="#071320" stroke="#dce5ec" stroke-width=".8"/><circle cx="11" cy="18" r="1.25" fill="#99aaba"/><circle cx="36" cy="18" r="3.2" fill="#071320" stroke="#dce5ec" stroke-width=".8"/><circle cx="36" cy="18" r="1.25" fill="#99aaba"/></svg>`;
+  const image = `url("data:image/svg+xml,${encodeURIComponent(busSvg)}")`;
+  [pmreSlider, pmrvSlider, pmpcSlider, disbSlider].forEach(slider => {
+    if (slider.dataset.busAppearance === appearance) return;
+    slider.style.setProperty("--range-truck-image", image);
+    slider.dataset.busAppearance = appearance;
+  });
+}
+
 function updateSimulator() {
   const base = getBaseRow();
   [pmreSlider, pmrvSlider, pmpcSlider, disbSlider].forEach(slider => {
@@ -525,11 +623,15 @@ function updateSimulator() {
     interp.className = "callout";
     interp.innerHTML = `<strong>Cenário próximo ao realizado em ${base.year}:</strong> Ciclo de <strong>${fmtNum(res.simCycle)} dias</strong>, NCG de <strong>${fmtBRL(res.simNcg)}</strong>, ST de <strong>${fmtBRL(res.simSt)}</strong> e caixa mínimo de <strong>${fmtBRL(res.simMinCash)}</strong> (folga de <strong>${fmtSignedBRL(res.simFolga)}</strong>).`;
   }
+  updateSimulatorBus(res.cycleDiff);
 }
 
 yearSelect.addEventListener("change", loadYearIntoSliders);
 [pmreSlider, pmrvSlider, pmpcSlider, disbSlider].forEach(el => el.addEventListener("input", updateSimulator));
 document.getElementById("resetSimBtn").addEventListener("click", loadYearIntoSliders);
+themeToggle.addEventListener("click", () => {
+  if (DATA.length) updateSimulator();
+});
 document.getElementById("presetPreBtn")?.addEventListener("click", () => {
   pmreSlider.value = "66.7";
   updateSimulator();
@@ -556,10 +658,10 @@ function renderChallengeOptions() {
     base.pmpc < 40 ? "prazo curto com fornecedores" : null
   ].filter(Boolean);
 
-  document.getElementById("challengeTitle").textContent = `Missão CFO: Recuperar Liquidez de ${base.year}`;
+  document.querySelector("#challengeTitle .heading-label").textContent = `Missão CFO: Recuperar Liquidez de ${base.year}`;
   document.getElementById("challengeContext").innerHTML =
     `Em ${base.year}, o ciclo financeiro foi de <strong>${fmtNum(base.cicloFin)} dias</strong>, a NCG de <strong>${fmtBRL(base.ncg)}</strong>, a folga de caixa de <strong>${fmtSignedBRL(base.folgaCaixa)}</strong> e o caixa operacional de <strong>${fmtBRL(base.cxOpInd)}</strong>. Principais sinais: ${issue.join(", ") || "ciclo e liquidez próximos da referência histórica"} <strong>Selecione medidas e avalie os trade-offs.</strong>`;
-  document.getElementById("challengeScoreTitle").textContent = `Placar da Decisão (${base.year})`;
+  document.querySelector("#challengeScoreTitle .heading-label").textContent = `Placar da Decisão (${base.year})`;
 
   const reducePmre = Math.min(20, Math.max(8, base.pmre * 0.12));
   const reducePmrv = Math.min(15, Math.max(6, base.pmrv * 0.10));

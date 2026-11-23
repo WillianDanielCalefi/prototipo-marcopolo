@@ -14,6 +14,8 @@
       --warning-bg: #fffbeb;
       --danger: #b91c1c;
       --danger-bg: #fef2f2;
+      --flow-positive: #ed7623;
+      --flow-negative: #2563eb;
       --radius: 12px;
       --shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
     }
@@ -289,16 +291,21 @@
     .flow-track { height: 14px; position: relative; border-radius: 5px; background: #f1f5f9; }
     .flow-track::before { content: ""; position: absolute; left: 50%; top: -3px; bottom: -3px; width: 1px; background: #94a3b8; }
     .flow-bar { position: absolute; top: 2px; height: 10px; border-radius: 4px; z-index: 1; }
-    .flow-bar.positive { left: 50%; background: var(--success); }
-    .flow-bar.negative { right: 50%; background: var(--danger); }
-    .flow-truck { position: absolute; top: 50%; width: 22px; height: 16px; transform: translateY(-50%); z-index: 2; }
+    .flow-bar.positive { left: 50%; background: var(--flow-positive); }
+    .flow-bar.negative { right: 50%; background: var(--flow-negative); }
+    .flow-truck { position: absolute; top: 50%; width: 34px; height: 20px; transform: translateY(-50%); z-index: 2; overflow: visible; }
     .flow-bar.positive .flow-truck { left: calc(100% + 4px); }
     .flow-bar.negative .flow-truck { right: calc(100% + 4px); transform: translateY(-50%) scaleX(-1); }
-    .flow-bar.positive .truck-body { fill: #34d399; }
-    .flow-bar.negative .truck-body { fill: #f87171; }
-    .flow-truck .truck-body { stroke: #0f172a; stroke-width: 1.3; stroke-linejoin: round; }
-    .flow-truck .truck-window { fill: #bfdbfe; stroke: #0f172a; stroke-width: 0.6; stroke-linejoin: round; }
-    .flow-truck .truck-wheel { fill: #0f172a; stroke: #fff; stroke-width: 0.6; }
+    .flow-bar.positive .truck-body { fill: var(--flow-positive); }
+    .flow-bar.negative .truck-body { fill: var(--flow-negative); }
+    .flow-truck .truck-body { stroke: #0f172a; stroke-width: 1.1; stroke-linejoin: round; }
+    .flow-truck .truck-window { fill: #102b43; stroke: #d9efff; stroke-width: 0.55; stroke-linejoin: round; }
+    .flow-truck .truck-detail { fill: none; stroke: rgba(15, 23, 42, 0.34); stroke-width: 0.45; }
+    .flow-truck .truck-highlight { fill: rgba(255, 255, 255, 0.48); }
+    .flow-truck .truck-bumper { fill: none; stroke: #cbd5e1; stroke-width: 1.1; stroke-linecap: round; }
+    .flow-truck .truck-wheel { fill: #0f172a; stroke: #e2e8f0; stroke-width: 0.7; }
+    .flow-truck .truck-hub { fill: #94a3b8; }
+    .flow-truck .truck-light { fill: #fef3a5; stroke: #0f172a; stroke-width: 0.35; }
 
     /* Simulator */
     .sim-layout {
@@ -510,6 +517,10 @@
       cursor: pointer;
     }
 
+    #simulador input[type="range"] {
+      --range-truck-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 24'%3E%3Cdefs%3E%3ClinearGradient id='b' x2='0' y2='1'%3E%3Cstop stop-color='%234b9be8'/%3E%3Cstop offset='1' stop-color='%230d3c76'/%3E%3C/linearGradient%3E%3ClinearGradient id='g' x2='0' y2='1'%3E%3Cstop stop-color='%233e5878'/%3E%3Cstop offset='1' stop-color='%23091525'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M2 17V8q0-3 4-4l28-2q5 0 8 5l4 7v3H2z' fill='url(%23b)' stroke='%23091525' stroke-width='1.1' stroke-linejoin='round'/%3E%3Cpath d='M6 5l8-1v6H5V8q0-2 1-3zm10-1 7-.5v6.5h-7zm9-.6 7-.5v7.1h-7zm9-.3 1-.1q4 0 6 4l2 3h-9z' fill='url(%23g)' stroke='%2386bde9' stroke-width='.45' stroke-linejoin='round'/%3E%3Cpath d='M4 13q14 1 29 0v1.4Q17 16 4 14.4z' fill='%23c5e5ff' opacity='.9'/%3E%3Cpath d='M3 16h42v1H3z' fill='%23091628'/%3E%3Cpath d='M43 13h3v1.5h-3z' fill='%23eaf7ff'/%3E%3Ccircle cx='11' cy='18' r='3.2' fill='%23071320' stroke='%23c4d3e3' stroke-width='.7'/%3E%3Ccircle cx='11' cy='18' r='1.25' fill='%238da4bb'/%3E%3Ccircle cx='36' cy='18' r='3.2' fill='%23071320' stroke='%23c4d3e3' stroke-width='.7'/%3E%3Ccircle cx='36' cy='18' r='1.25' fill='%238da4bb'/%3E%3C/svg%3E");
+    }
+
     input[type="range"]::-webkit-slider-runnable-track {
       height: 6px;
       border: 1px solid #bfdbfe;
@@ -525,6 +536,12 @@
       border: 0;
       background: var(--range-truck-image) center / contain no-repeat;
       cursor: grab;
+    }
+
+    #simulador input[type="range"]::-webkit-slider-thumb {
+      width: 32px;
+      height: 22px;
+      margin-top: -7px;
     }
 
     input[type="range"]:active::-webkit-slider-thumb {
@@ -544,6 +561,11 @@
       border: 0;
       background: var(--range-truck-image) center / contain no-repeat;
       cursor: grab;
+    }
+
+    #simulador input[type="range"]::-moz-range-thumb {
+      width: 32px;
+      height: 22px;
     }
 
     input[type="range"]:active::-moz-range-thumb {
@@ -1182,6 +1204,36 @@
       display: flex;
       justify-content: flex-start;
       margin-top: 16px;
+    }
+
+    .market-refresh-card {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 4px 18px;
+    }
+
+    .market-refresh-copy .section-heading {
+      margin-bottom: 4px;
+    }
+
+    .market-refresh-copy .desc {
+      margin-bottom: 0;
+    }
+
+    .market-refresh-card .market-status {
+      grid-column: 1 / -1;
+      margin-top: 4px;
+    }
+
+    @media (max-width: 560px) {
+      .market-refresh-card {
+        grid-template-columns: 1fr;
+      }
+
+      .market-refresh-card .market-status {
+        grid-column: auto;
+      }
     }
 
     .market-chart-control {
@@ -2027,6 +2079,8 @@
       --danger: #f07878;
       --danger-bg: #3b2024;
       --danger-text: #ff9a9a;
+      --flow-positive: #f28a36;
+      --flow-negative: #8ab7e4;
       --shadow: 0 12px 30px rgba(0, 0, 0, 0.24);
     }
 
@@ -2035,6 +2089,10 @@
         radial-gradient(ellipse at 90% 3%, rgba(7, 84, 154, 0.16), transparent 34rem),
         radial-gradient(ellipse at 8% 0%, rgba(237, 118, 35, 0.1), transparent 30rem),
         var(--bg);
+    }
+
+    :root[data-theme="dark"] #simulador input[type="range"] {
+      --range-truck-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 24'%3E%3Cpath d='M2 17V8q0-3 4-4l28-2q5 0 8 5l4 7v3H2z' fill='%238ab7e4' stroke='%23d8eaff' stroke-width='1.2' stroke-linejoin='round'/%3E%3Cpath d='M6 5l8-1v6H5V8q0-2 1-3zm10-1 7-.5v6.5h-7zm9-.6 7-.5v7.1h-7zm9-.3 1-.1q4 0 6 4l2 3h-9z' fill='%2315202b' stroke='%23aebdca' stroke-width='.5' stroke-linejoin='round'/%3E%3Cpath d='M4 13q14 1 29 0v1.4Q17 16 4 14.4z' fill='%23d8eaff'/%3E%3Cpath d='M3 16h42v1H3z' fill='%23111b25'/%3E%3Cpath d='M43 13h3v1.5h-3z' fill='%23fff0a6'/%3E%3Ccircle cx='11' cy='18' r='3.2' fill='%23071320' stroke='%23dce5ec' stroke-width='.8'/%3E%3Ccircle cx='11' cy='18' r='1.25' fill='%2399aaba'/%3E%3Ccircle cx='36' cy='18' r='3.2' fill='%23071320' stroke='%23dce5ec' stroke-width='.8'/%3E%3Ccircle cx='36' cy='18' r='1.25' fill='%2399aaba'/%3E%3C/svg%3E");
     }
 
     :root[data-theme="dark"] .card:hover {

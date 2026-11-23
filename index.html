@@ -43,12 +43,12 @@
         </div>
         <button class="tab-btn active" data-tab="diagnostico" aria-controls="diagnostico" aria-current="page">1. Diagnóstico (2017–2025)</button>
         <button class="tab-btn" data-tab="simulador" aria-controls="simulador">2. Simulador de Capital de Giro</button>
-        <button class="tab-btn" data-tab="desafio" aria-controls="desafio">3. Desafio CFO (por ano)</button>
+        <button class="tab-btn" data-tab="desafio" aria-controls="desafio">3. Desafio CFO</button>
         <button class="tab-btn" data-tab="conceitos" aria-controls="conceitos">4. Conceitos e Indicadores</button>
         <button class="tab-btn" data-tab="estrategias" aria-controls="estrategias">5. Estratégias de Gestão</button>
         <button class="tab-btn" data-tab="fluxoCaixa" aria-controls="fluxoCaixa">6. Fluxo de Caixa</button>
-        <button class="tab-btn" data-tab="comparativo" aria-controls="comparativo">7. Comparativo e Conclusão</button>
-        <button class="tab-btn" data-tab="acoes" aria-controls="acoes">8. Ações</button>
+        <button class="tab-btn" data-tab="acoes" aria-controls="acoes">7. Marcopolo na Bolsa</button>
+        <button class="tab-btn" data-tab="comparativo" aria-controls="comparativo">8. Comparativo e Conclusão</button>
       </nav>
     </div>
   </header>
@@ -508,7 +508,7 @@
       </div>
     </section>
 
-    <!-- ABA 6: COMPARATIVO E CONCLUSÃO -->
+    <!-- ABA 8: COMPARATIVO E CONCLUSÃO -->
     <section id="comparativo" class="tab-panel">
       <div class="card">
         <h2>Comparativo dos períodos da pandemia (Dados Reais)</h2>
@@ -561,10 +561,11 @@
           <p>Os indicadores desta versão vêm da planilha-base atualizada. A análise usa o segmento industrial; aging da carteira e composição dos estoques são consolidados.</p>
           <p><strong>Premissas importantes da planilha:</strong> saldos finais (não médias), 360 dias, <em>Compras = (−CPV) − Estoque inicial + Estoque final</em>, <em>Outras contas a receber</em> tratadas como ACO, dividendos a pagar e arrendamento circulante tratados como PCF, e efeitos específicos como créditos tributários/venda de imóvel em 2021, incorporação da Ciferal/impairment em 2023 e consolidação da Metalsur/Loma e hiperinflação em 2024–2025.</p>
         </div>
+
       </div>
     </section>
 
-    <!-- ABA 7: FLUXO DE CAIXA -->
+    <!-- ABA 6: FLUXO DE CAIXA -->
     <section id="fluxoCaixa" class="tab-panel">
       <div class="card">
         <h2 class="section-heading"><i class="heading-icon icon-blue" data-lucide="landmark" aria-hidden="true"></i><span>Fluxo de caixa do segmento industrial</span></h2>
@@ -598,15 +599,15 @@
       </div>
     </section>
 
-    <!-- ABA 8: AÇÕES -->
+    <!-- ABA 8: MARCOPOLO NA BOLSA -->
     <section id="acoes" class="tab-panel market-tab">
-      <div class="card">
-        <h2 class="section-heading"><i class="heading-icon icon-orange" data-lucide="chart-no-axes-combined" aria-hidden="true"></i><span>Acompanhamento de mercado</span></h2>
-        <p class="desc">Consulte cotações e histórico diário de POMO3 e POMO4 pela brapi. A autenticação é feita no servidor e a chave não é enviada ao navegador.</p>
-        <div class="market-connect-form">
-          <button id="marketRefreshButton" class="btn btn-primary" type="button">Atualizar agora</button>
+      <div class="card market-refresh-card">
+        <div class="market-refresh-copy">
+          <h2 class="section-heading"><i class="heading-icon icon-blue" data-lucide="chart-no-axes-combined" aria-hidden="true"></i><span>Cotações da Marcopolo</span></h2>
+          <p class="desc">Acompanhe os preços de POMO3 e POMO4.</p>
         </div>
-        <p id="marketStatus" class="market-status" role="status" aria-live="polite">As cotações serão carregadas ao abrir esta aba. A chave fica somente no servidor.</p>
+        <button id="marketRefreshButton" class="btn btn-primary" type="button">Atualizar cotações</button>
+        <p id="marketStatus" class="market-status" role="status" aria-live="polite">As cotações são carregadas automaticamente ao abrir esta aba.</p>
       </div>
 
       <div class="card market-company-summary" aria-label="Valor de mercado da Marcopolo">
@@ -704,10 +705,10 @@
           </div>
         </div>
         <p id="marketChartDescription" class="desc">A série diária será carregada junto com as cotações.</p>
-        <div class="market-chart-legend" aria-label="Legenda do gráfico">
-          <span><i class="market-legend-candle market-legend-up" aria-hidden="true"></i>Alta</span>
-          <span><i class="market-legend-candle market-legend-down" aria-hidden="true"></i>Baixa</span>
-          <span><i class="market-legend-volume" aria-hidden="true"></i>Volume</span>
+        <div class="market-chart-legend" aria-label="Legenda do gráfico de preços e volume">
+          <span><i class="market-legend-candle market-legend-up" aria-hidden="true"></i>Alta no dia</span>
+          <span><i class="market-legend-candle market-legend-down" aria-hidden="true"></i>Baixa no dia</span>
+          <span><i class="market-legend-volume" aria-hidden="true"></i>Volume (ações)</span>
         </div>
         <div id="marketChart" class="market-chart">
           <p class="market-chart-empty">Carregue as cotações para exibir o histórico de preços.</p>
@@ -720,7 +721,7 @@
         <div id="marketPerformanceSummary" class="market-performance-summary">
           <p class="market-chart-empty">O comparativo será carregado junto com o histórico.</p>
         </div>
-        <div class="market-chart-legend market-comparison-legend" aria-label="Legenda do comparativo">
+        <div class="market-chart-legend market-comparison-legend" aria-label="Retorno acumulado em porcentagem por ativo">
           <span><i class="market-legend-line market-legend-pomo3" aria-hidden="true"></i>POMO3</span>
           <span><i class="market-legend-line market-legend-pomo4" aria-hidden="true"></i>POMO4</span>
         </div>
