@@ -6,6 +6,7 @@ Protótipo interativo para análise do capital de giro da Marcopolo entre 2017 e
 
 - Diagnóstico dos indicadores por ano;
 - simulador de capital de giro;
+- simulador didático do modelo de caixa Miller–Orr;
 - desafio CFO;
 - conceitos e indicadores;
 - estratégias de gestão;
@@ -16,11 +17,16 @@ Protótipo interativo para análise do capital de giro da Marcopolo entre 2017 e
 
 Os valores monetários são apresentados em reais milhões. Os indicadores usam ano-base de 360 dias. A base considera o segmento industrial; dados de aging e composição dos estoques são consolidados, conforme as premissas da planilha.
 
+### Simulação Miller–Orr
+
+O módulo dentro do **Simulador de Capital de Giro** calcula a amplitude ótima, o ponto de retorno e o limite superior a partir do limite mínimo de caixa, custo por operação, desvio-padrão diário dos fluxos líquidos e custo de oportunidade efetivo anual. A taxa anual é convertida em taxa diária equivalente usando a base de 360 dias. Os valores iniciais são exemplos didáticos e devem ser substituídos por premissas reais; os dados anuais da planilha não permitem estimar a variância diária necessária para uma aplicação operacional.
+
 ## Arquivos
 
 - `index.html`: estrutura da interface e ponto de entrada;
 - `css/styles.css`: estilos da aplicação;
 - `js/app.js`: inicialização, renderização das abas e interações;
+- `js/miller-orr.js`: cálculo e interação da simulação Miller–Orr;
 - `js/stocks.js`: consulta e renderização das cotações e do histórico via brapi;
 - `js/data.js`: conversão dos dados do JSON para o formato usado pela interface;
 - `js/formatters.js`: formatação de números e valores monetários;
@@ -32,29 +38,25 @@ O site usa o JSON. A planilha Excel não é necessária para executar a aplicaç
 
 ### Cotações da brapi
 
-A aba **Ações** consulta POMO3 e POMO4 pelos endpoints `/api/v2/stocks/quote` e `/api/v2/stocks/historical`. Cada chamada envia os dois ativos no parâmetro `symbols`. O proxy em `server.ps1` lê `BRAPI_TOKEN` do ambiente do servidor e envia `Authorization: Bearer <BRAPI_TOKEN>`; a chave nunca é incluída no HTML, JavaScript ou repositório. As cotações são atualizadas automaticamente a cada 15 minutos enquanto a página e a aba Ações estão visíveis, e o histórico pode ser consultado em janelas de 1 ou 3 meses.
+A aba **Ações** consulta POMO3 e POMO4 pela API PHP independente em `C:\projetos\api-brapi-marcopolo`. A API chama os endpoints `/api/v2/stocks/quote` e `/api/v2/stocks/historical`; o front envia um ativo por requisição para funcionar também no plano gratuito da brapi. A API lê `BRAPI_TOKEN` do ambiente do servidor e envia `Authorization: Bearer <BRAPI_TOKEN>`; a chave não é incluída no HTML, JavaScript ou repositório. As cotações são atualizadas automaticamente a cada 15 minutos enquanto a página e a aba Ações estão visíveis, e o histórico pode ser consultado em janelas de 1 ou 3 meses.
+
+Os cartões mostram abertura, faixa de 52 semanas e valor de mercado da Marcopolo. O histórico inclui candles OHLC e volume diário; um gráfico separado compara o retorno percentual de POMO3 e POMO4 usando fechamento ajustado quando disponível.
 
 O servidor encaminha erros HTTP 401, 404 e 429 da brapi. Em caso de 429, ele repassa `Retry-After` e a interface bloqueia novas tentativas até o prazo indicado. Campos numéricos nulos são apresentados como indisponíveis; pontos históricos sem data ou fechamento são omitidos. Sem chave, a brapi permite testar PETR4, VALE3, MGLU3 e ITUB4; POMO3/POMO4 exigem um token válido.
 
 ## Como executar
 
-O navegador precisa carregar a aplicação por HTTP; não abra o `index.html` diretamente como arquivo (`file://`). Para usar o proxy PowerShell integrado, siga as instruções abaixo. O Live Server sozinho não fornece as rotas do proxy.
+O navegador precisa carregar a aplicação por HTTP; não abra o `index.html` diretamente como arquivo (`file://`).
 
-### Windows PowerShell
+### Iniciar a API
 
-Na pasta do projeto, configure a chave de forma interativa e inicie o servidor:
+Siga o README da API em `C:\projetos\api-brapi-marcopolo` para iniciar o servidor PHP em `http://localhost:8080`. A URL já está configurada em `market-api-base-url` no `index.html`.
 
-```powershell
-$secureToken = Read-Host "Chave da brapi" -AsSecureString
-$env:BRAPI_TOKEN = (New-Object System.Net.NetworkCredential("", $secureToken)).Password
-powershell -ExecutionPolicy Bypass -File .\server.ps1
-```
+### Servir o frontend localmente
 
-Abra `http://localhost:8000`. A variável é lida pelo servidor no início do processo; reinicie-o após trocar o token. Para consultar PETR4/VALE3 sem token, basta executar `.\server.ps1`.
+Use a extensão **Live Server** do VS Code para abrir `index.html` (normalmente em `http://127.0.0.1:5500`). A API PHP permite essa origem por padrão para desenvolvimento local.
 
-### Usar a API PHP separada
-
-O projeto PHP independente fica em `C:\projetos\api-brapi-marcopolo`. Consulte o README dessa pasta para executar ou publicar a API. Para apontar esta aplicação para ela, altere o valor de `market-api-base-url` no `<head>` do `index.html` para a origem da API, por exemplo `http://localhost:8080`. Em producao, use a URL HTTPS da hospedagem PHP e configure `CORS_ALLOWED_ORIGINS` com a origem exata deste frontend.
+Em produção, altere `market-api-base-url` para a URL HTTPS da API e configure `CORS_ALLOWED_ORIGINS` nela com a origem exata do frontend.
 
 ## Dados
 

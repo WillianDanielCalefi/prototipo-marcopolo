@@ -8,10 +8,16 @@ const currencyFormat = new Intl.NumberFormat("pt-BR", {
   style: "currency",
   currency: "BRL"
 });
-const axisCurrencyFormat = new Intl.NumberFormat("pt-BR", {
+const compactCurrencyFormat = new Intl.NumberFormat("pt-BR", {
   style: "currency",
   currency: "BRL",
-  maximumFractionDigits: 0
+  notation: "compact",
+  maximumFractionDigits: 2
+});
+const chartCurrencyFormat = new Intl.NumberFormat("pt-BR", {
+  style: "currency",
+  currency: "BRL",
+  maximumFractionDigits: 2
 });
 const numberFormat = new Intl.NumberFormat("pt-BR");
 const percentFormat = new Intl.NumberFormat("pt-BR", {
@@ -35,7 +41,11 @@ function getElement(id) {
   return element;
 }
 
-function getApiError(status) {
+function getApiError(status, payload) {
+  if (payload && typeof payload.message === "string" && payload.message.trim()) {
+    return payload.message;
+  }
+
   const messages = {
     401: "BRAPI_TOKEN ausente ou inválido no servidor. Configure a variável de ambiente e reinicie o servidor.",
     403: "Seu plano da brapi não permite consultar esses dados.",
@@ -43,6 +53,16 @@ function getApiError(status) {
     429: "Limite de consultas atingido. Aguarde o prazo indicado pela brapi antes de tentar novamente."
   };
   return messages[status] || `A brapi respondeu com erro HTTP ${status}.`;
+}
+
+function getApiSetupError() {
+  if (window.location.protocol === "file:") {
+    return "Abra o frontend pelo Live Server (http://127.0.0.1:5500); páginas file:// não podem acessar a API PHP por CORS.";
+  }
+  if (!MARKET_API_BASE_URL) {
+    return "URL da API PHP não configurada. Defina market-api-base-url no index.html.";
+  }
+  return "";
 }
 
 async function requestBrapi(path) {
@@ -65,8 +85,9 @@ async function requestBrapi(path) {
   }
 
   if (!response.ok) {
-    const apiError = new Error(getApiError(response.status));
+    const apiError = new Error(getApiError(response.status, payload));
     apiError.status = response.status;
+    apiError.code = payload && typeof payload.code === "string" ? payload.code : "";
     apiError.retryAfter = response.headers.get("Retry-After");
     throw apiError;
   }
@@ -75,6 +96,15 @@ async function requestBrapi(path) {
     throw new Error("A resposta da brapi não contém a lista esperada de resultados.");
   }
   return payload.results;
+}
+
+async function requestBrapiForSymbols(path, parameters = {}) {
+  const results = [];
+  for (const symbol of SYMBOLS) {
+    const query = new URLSearchParams({ ...parameters, symbols: symbol });
+    results.push(...await requestBrapi(`${path}?${query}`));
+  }
+  return results;
 }
 
 function findSymbolResult(results, symbol) {
@@ -87,6 +117,36 @@ function isFiniteNumber(value) {
 
 function formatOptionalCurrency(value) {
   return isFiniteNumber(value) ? currencyFormat.format(value) : "—";
+}
+
+function render52WeekRange(suffix, data) {
+  const low = data.fiftyTwoWeekLow;
+  const high = data.fiftyTwoWeekHigh;
+  const price = data.regularMarketPrice;
+  const lowElement = getElement(`market52wLow${suffix}`);
+  const highElement = getElement(`market52wHigh${suffix}`);
+  const positionElement = getElement(`market52wPosition${suffix}`);
+  const track = getElement(`market52wTrack${suffix}`);
+  const marker = track.querySelector(".market-range-marker");
+
+  lowElement.textContent = `Mín. ${formatOptionalCurrency(low)}`;
+  highElement.textContent = `Máx. ${formatOptionalCurrency(high)}`;
+  if (!isFiniteNumber(price) || !isFiniteNumber(low) || !isFiniteNumber(high) || high <= low) {
+    positionElement.textContent = "—";
+    track.setAttribute("aria-valuenow", "0");
+    track.setAttribute("aria-valuetext", "Faixa de 52 semanas indisponível");
+    marker.style.left = "0%";
+    return;
+  }
+
+  const position = Math.min(100, Math.max(0, (price - low) / (high - low) * 100));
+  positionElement.textContent = `${percentFormat.format(position)}% da faixa`;
+  track.setAttribute("aria-valuenow", position.toFixed(1));
+  track.setAttribute(
+    "aria-valuetext",
+    `Preço atual ${currencyFormat.format(price)}: ${percentFormat.format(position)}% entre ${currencyFormat.format(low)} e ${currencyFormat.format(high)}`
+  );
+  marker.style.left = `${position}%`;
 }
 
 function formatMarketTime(value) {
@@ -118,6 +178,8 @@ export function initializeStocksTab() {
   const chartRangeSelect = getElement("marketChartRange");
   const chartContainer = getElement("marketChart");
   const chartDescription = getElement("marketChartDescription");
+  const comparisonChart = getElement("marketComparisonChart");
+  const performanceSummary = getElement("marketPerformanceSummary");
 
   let busy = false;
   let hasQuoteData = false;
@@ -167,6 +229,11 @@ export function initializeStocksTab() {
 
   function renderQuotes(results) {
     const missingSymbols = [];
+    const companyResult = results.find(result => result && result.data && isFiniteNumber(result.data.marketCap));
+    getElement("marketCompanyMarketCap").textContent = companyResult
+      ? compactCurrencyFormat.format(companyResult.data.marketCap)
+      : "—";
+
     for (const symbol of SYMBOLS) {
       const suffix = symbol === "POMO3" ? "Pomo3" : "Pomo4";
       const result = findSymbolResult(results, symbol);
@@ -175,11 +242,13 @@ export function initializeStocksTab() {
       if (!result || !result.data) {
         priceElement.textContent = "Sem cotação";
         changeElement.textContent = "A brapi não retornou este ativo.";
+        render52WeekRange(suffix, {});
         missingSymbols.push(symbol);
         continue;
       }
 
       const data = result.data;
+      render52WeekRange(suffix, data);
       const nameElement = getElement(`marketName${suffix}`);
       nameElement.textContent = data.shortName || data.longName || (symbol === "POMO3" ? "Marcopolo ON" : "Marcopolo PN");
       if (!isFiniteNumber(data.regularMarketPrice)) {
@@ -194,6 +263,7 @@ export function initializeStocksTab() {
       getElement(`marketTime${suffix}`).textContent = data.regularMarketTime
         ? `Pregão: ${formatMarketTime(data.regularMarketTime)}`
         : "Horário do pregão indisponível";
+      getElement(`marketOpen${suffix}`).textContent = formatOptionalCurrency(data.regularMarketOpen);
       getElement(`marketHigh${suffix}`).textContent = formatOptionalCurrency(data.regularMarketDayHigh);
       getElement(`marketLow${suffix}`).textContent = formatOptionalCurrency(data.regularMarketDayLow);
       getElement(`marketPrevious${suffix}`).textContent = formatOptionalCurrency(data.regularMarketPreviousClose);
@@ -215,11 +285,11 @@ export function initializeStocksTab() {
     return missingSymbols;
   }
 
-  function showEmptyChart(message) {
+  function showEmptyChart(message, container = chartContainer) {
     const paragraph = document.createElement("p");
     paragraph.className = "market-chart-empty";
     paragraph.textContent = message;
-    chartContainer.replaceChildren(paragraph);
+    container.replaceChildren(paragraph);
   }
 
   function renderHistoryChart() {
@@ -231,30 +301,217 @@ export function initializeStocksTab() {
       return;
     }
 
-    const values = rows.map(row => row.close);
-    const dataMinimum = Math.min(...values);
-    const dataMaximum = Math.max(...values);
+    const priceValues = rows.flatMap(row =>
+      [row.low, row.high, row.open, row.close].filter(isFiniteNumber)
+    );
+    const dataMinimum = Math.min(...priceValues);
+    const dataMaximum = Math.max(...priceValues);
     const paddingValue = (dataMaximum - dataMinimum) || Math.max(dataMaximum * 0.02, 0.01);
     const minimum = dataMinimum - paddingValue * 0.12;
     const maximum = dataMaximum + paddingValue * 0.12;
-    const width = 720;
-    const height = 280;
-    const margins = { top: 20, right: 20, bottom: 42, left: 82 };
+    const width = 760;
+    const height = 356;
+    const margins = { top: 24, right: 24, bottom: 24, left: 86 };
+    const priceTop = margins.top;
+    const priceBottom = 218;
+    const volumeTop = 250;
+    const volumeBottom = 320;
     const plotWidth = width - margins.left - margins.right;
-    const plotHeight = height - margins.top - margins.bottom;
-    const points = rows.map((row, index) => ({
-      x: margins.left + index / Math.max(rows.length - 1, 1) * plotWidth,
-      y: margins.top + (maximum - row.close) / (maximum - minimum) * plotHeight,
-      row
-    }));
+    const priceHeight = priceBottom - priceTop;
+    const volumeHeight = volumeBottom - volumeTop;
+    const volumeMaximum = Math.max(0, ...rows.map(row =>
+      isFiniteNumber(row.volume) ? row.volume : 0
+    ));
+    const xForIndex = index => margins.left
+      + index / Math.max(rows.length - 1, 1) * plotWidth;
+    const yForPrice = value => priceTop + (maximum - value) / (maximum - minimum) * priceHeight;
+    const candleWidth = Math.max(3, Math.min(12, plotWidth / rows.length * 0.56));
 
     const svg = svgElement("svg", {
       class: "market-chart-svg",
       viewBox: `0 0 ${width} ${height}`,
       role: "img",
-      "aria-label": `Histórico diário de fechamento de ${symbol}`
+      "aria-label": `Candles de preço e volume diário de ${symbol}`
     });
-    svg.appendChild(svgElement("title", {}, `Histórico de ${symbol}`));
+    svg.appendChild(svgElement("title", {}, `Candles e volume de ${symbol}`));
+
+    for (let index = 0; index <= 4; index += 1) {
+      const fraction = index / 4;
+      const y = priceTop + fraction * priceHeight;
+      const value = maximum - fraction * (maximum - minimum);
+      svg.appendChild(svgElement("line", {
+        class: "market-chart-grid",
+        x1: margins.left,
+        x2: width - margins.right,
+        y1: y,
+        y2: y
+      }));
+      svg.appendChild(svgElement("text", {
+        class: "market-chart-axis",
+        x: margins.left - 10,
+        y: y + 4,
+        "text-anchor": "end"
+      }, chartCurrencyFormat.format(value)));
+    }
+
+    svg.appendChild(svgElement("text", {
+      class: "market-chart-axis",
+      x: margins.left,
+      y: volumeTop - 8
+    }, "Volume"));
+    svg.appendChild(svgElement("line", {
+      class: "market-chart-grid",
+      x1: margins.left,
+      x2: width - margins.right,
+      y1: volumeTop,
+      y2: volumeTop
+    }));
+
+    rows.forEach((row, index) => {
+      const x = xForIndex(index);
+      const date = chartDateFormat.format(new Date(row.date * 1000));
+      const hasOhlc = [row.open, row.high, row.low, row.close].every(isFiniteNumber);
+      const direction = hasOhlc
+        ? row.close > row.open ? "up" : row.close < row.open ? "down" : "flat"
+        : "flat";
+
+      if (hasOhlc) {
+        const group = svgElement("g", { class: `market-candle market-candle-${direction}` });
+        group.appendChild(svgElement("title", {}, `${date} · Abertura ${currencyFormat.format(row.open)} · Máxima ${currencyFormat.format(row.high)} · Mínima ${currencyFormat.format(row.low)} · Fechamento ${currencyFormat.format(row.close)}`));
+        group.appendChild(svgElement("line", {
+          class: `market-candle-wick market-candle-${direction}`,
+          x1: x,
+          x2: x,
+          y1: yForPrice(row.high),
+          y2: yForPrice(row.low)
+        }));
+        const bodyTop = Math.min(yForPrice(row.open), yForPrice(row.close));
+        const bodyHeight = Math.max(1.5, Math.abs(yForPrice(row.open) - yForPrice(row.close)));
+        group.appendChild(svgElement("rect", {
+          class: `market-candle-body market-candle-${direction}`,
+          x: x - candleWidth / 2,
+          y: bodyTop,
+          width: candleWidth,
+          height: bodyHeight,
+          rx: 1
+        }));
+        svg.appendChild(group);
+      } else {
+        const closePoint = svgElement("circle", {
+          class: "market-chart-point",
+          cx: x,
+          cy: yForPrice(row.close),
+          r: 3
+        });
+        closePoint.appendChild(svgElement("title", {}, `${date} · Fechamento ${currencyFormat.format(row.close)} · Dados OHLC indisponíveis`));
+        svg.appendChild(closePoint);
+      }
+
+      if (isFiniteNumber(row.volume) && row.volume > 0 && volumeMaximum > 0) {
+        const barHeight = row.volume / volumeMaximum * volumeHeight;
+        const volumeBar = svgElement("rect", {
+          class: `market-volume-bar market-candle-${direction}`,
+          x: x - candleWidth / 2,
+          y: volumeBottom - barHeight,
+          width: candleWidth,
+          height: barHeight,
+          rx: 1
+        });
+        volumeBar.appendChild(svgElement("title", {}, `${date} · Volume ${numberFormat.format(row.volume)}`));
+        svg.appendChild(volumeBar);
+      }
+    });
+
+    const labelIndices = [...new Set([0, Math.floor((rows.length - 1) / 2), rows.length - 1])];
+    for (const index of labelIndices) {
+      const x = xForIndex(index);
+      svg.appendChild(svgElement("text", {
+        class: "market-chart-axis",
+        x,
+        y: height - 8,
+        "text-anchor": index === 0 ? "start" : index === rows.length - 1 ? "end" : "middle"
+      }, chartDateFormat.format(new Date(rows[index].date * 1000))));
+    }
+
+    chartContainer.replaceChildren(svg);
+    chartDescription.textContent =
+      `${symbol} · ${rows.length} pregões · Candles mostram abertura, máxima, mínima e fechamento; barras inferiores mostram o volume.`;
+  }
+
+  function renderPerformanceComparison() {
+    performanceSummary.replaceChildren();
+    const seriesBySymbol = {};
+    for (const symbol of SYMBOLS) {
+      seriesBySymbol[symbol] = new Map(
+        (historyBySymbol[symbol] || [])
+          .map(row => {
+            const value = isFiniteNumber(row.adjustedClose) && row.adjustedClose > 0
+              ? row.adjustedClose
+              : row.close;
+            return [row.date, value];
+          })
+          .filter(([, value]) => isFiniteNumber(value) && value > 0)
+      );
+    }
+
+    const commonDates = [...seriesBySymbol[SYMBOLS[0]].keys()]
+      .filter(date => seriesBySymbol[SYMBOLS[1]].has(date))
+      .sort((left, right) => left - right);
+    if (commonDates.length < 2) {
+      const message = "Não há datas comuns suficientes para comparar o desempenho dos ativos.";
+      showEmptyChart(message, performanceSummary);
+      showEmptyChart(message, comparisonChart);
+      return;
+    }
+
+    const performanceBySymbol = {};
+    for (const symbol of SYMBOLS) {
+      const series = seriesBySymbol[symbol];
+      const base = series.get(commonDates[0]);
+      performanceBySymbol[symbol] = commonDates.map(date => ({
+        date,
+        value: (series.get(date) / base - 1) * 100
+      }));
+
+      const periodReturn = performanceBySymbol[symbol][commonDates.length - 1].value;
+      const item = document.createElement("div");
+      item.className = "market-performance-item";
+      const label = document.createElement("span");
+      label.className = "market-performance-symbol";
+      label.textContent = symbol;
+      const value = document.createElement("strong");
+      value.className = "market-performance-value";
+      value.textContent = `${formatSigned(periodReturn, percentFormat)}%`;
+      value.classList.toggle("is-positive", periodReturn > 0);
+      value.classList.toggle("is-negative", periodReturn < 0);
+      item.append(label, value);
+      performanceSummary.appendChild(item);
+    }
+
+    const allValues = SYMBOLS.flatMap(symbol =>
+      performanceBySymbol[symbol].map(point => point.value)
+    );
+    const dataMinimum = Math.min(0, ...allValues);
+    const dataMaximum = Math.max(0, ...allValues);
+    const paddingValue = (dataMaximum - dataMinimum) || 1;
+    const minimum = dataMinimum - paddingValue * 0.12;
+    const maximum = dataMaximum + paddingValue * 0.12;
+    const width = 760;
+    const height = 280;
+    const margins = { top: 22, right: 24, bottom: 34, left: 82 };
+    const plotWidth = width - margins.left - margins.right;
+    const plotHeight = height - margins.top - margins.bottom;
+    const xForIndex = index => margins.left
+      + index / Math.max(commonDates.length - 1, 1) * plotWidth;
+    const yForValue = value => margins.top
+      + (maximum - value) / (maximum - minimum) * plotHeight;
+    const svg = svgElement("svg", {
+      class: "market-chart-svg",
+      viewBox: `0 0 ${width} ${height}`,
+      role: "img",
+      "aria-label": "Comparativo de retorno acumulado de POMO3 e POMO4"
+    });
+    svg.appendChild(svgElement("title", {}, "Retorno acumulado de POMO3 e POMO4"));
 
     for (let index = 0; index <= 4; index += 1) {
       const fraction = index / 4;
@@ -272,40 +529,47 @@ export function initializeStocksTab() {
         x: margins.left - 10,
         y: y + 4,
         "text-anchor": "end"
-      }, axisCurrencyFormat.format(value)));
+      }, `${formatSigned(value, percentFormat)}%`));
     }
 
-    const path = points.map((point, index) =>
-      `${index === 0 ? "M" : "L"} ${point.x.toFixed(2)} ${point.y.toFixed(2)}`
-    ).join(" ");
-    svg.appendChild(svgElement("path", { class: "market-chart-line", d: path }));
+    for (const symbol of SYMBOLS) {
+      const points = performanceBySymbol[symbol].map((point, index) => ({
+        ...point,
+        x: xForIndex(index),
+        y: yForValue(point.value)
+      }));
+      const seriesClass = symbol.toLowerCase();
+      const path = points.map((point, index) =>
+        `${index === 0 ? "M" : "L"} ${point.x.toFixed(2)} ${point.y.toFixed(2)}`
+      ).join(" ");
+      svg.appendChild(svgElement("path", {
+        class: `market-comparison-line market-comparison-line-${seriesClass}`,
+        d: path
+      }));
 
-    for (const point of points) {
-      const date = new Date(point.row.date * 1000);
-      const circle = svgElement("circle", {
-        class: "market-chart-point",
-        cx: point.x,
-        cy: point.y,
-        r: 2.5
-      });
-      circle.appendChild(svgElement("title", {}, `${date.toLocaleDateString("pt-BR")}: ${currencyFormat.format(point.row.close)}`));
-      svg.appendChild(circle);
+      for (const point of points) {
+        const circle = svgElement("circle", {
+          class: `market-comparison-point-${seriesClass}`,
+          cx: point.x,
+          cy: point.y,
+          r: 2.5
+        });
+        circle.appendChild(svgElement("title", {}, `${symbol} · ${chartDateFormat.format(new Date(point.date * 1000))}: ${formatSigned(point.value, percentFormat)}%`));
+        svg.appendChild(circle);
+      }
     }
 
-    const labelIndices = [...new Set([0, Math.floor((rows.length - 1) / 2), rows.length - 1])];
+    const labelIndices = [...new Set([0, Math.floor((commonDates.length - 1) / 2), commonDates.length - 1])];
     for (const index of labelIndices) {
-      const point = points[index];
       svg.appendChild(svgElement("text", {
         class: "market-chart-axis",
-        x: point.x,
-        y: height - 12,
-        "text-anchor": index === 0 ? "start" : index === rows.length - 1 ? "end" : "middle"
-      }, chartDateFormat.format(new Date(point.row.date * 1000))));
+        x: xForIndex(index),
+        y: height - 8,
+        "text-anchor": index === 0 ? "start" : index === commonDates.length - 1 ? "end" : "middle"
+      }, chartDateFormat.format(new Date(commonDates[index] * 1000))));
     }
 
-    chartContainer.replaceChildren(svg);
-    chartDescription.textContent =
-      `${symbol} · ${rows.length} pregões · Preços diários de fechamento retornados pela brapi.`;
+    comparisonChart.replaceChildren(svg);
   }
 
   function renderHistory(results) {
@@ -324,13 +588,19 @@ export function initializeStocksTab() {
         .filter(row => row && typeof row === "object")
         .map(row => ({
           date: isFiniteNumber(row.date) ? row.date : null,
-          close: isFiniteNumber(row.close) ? row.close : null
+          open: isFiniteNumber(row.open) ? row.open : null,
+          high: isFiniteNumber(row.high) ? row.high : null,
+          low: isFiniteNumber(row.low) ? row.low : null,
+          close: isFiniteNumber(row.close) ? row.close : null,
+          adjustedClose: isFiniteNumber(row.adjustedClose) ? row.adjustedClose : null,
+          volume: isFiniteNumber(row.volume) ? row.volume : null
         }))
         .filter(row => row.date !== null && row.close !== null)
         .sort((left, right) => left.date - right.date);
       if (!historyBySymbol[symbol].length) missingSymbols.push(symbol);
     }
     renderHistoryChart();
+    renderPerformanceComparison();
     return missingSymbols;
   }
 
@@ -344,12 +614,16 @@ export function initializeStocksTab() {
   }
 
   async function loadMarketData(includeHistory) {
+    const setupError = getApiSetupError();
+    if (setupError) {
+      setStatus(setupError, "error");
+      return false;
+    }
     if (busy || Date.now() < retryUntil) return false;
     setBusy(true);
     let quoteMissing;
     try {
-      const quoteQuery = new URLSearchParams({ symbols: SYMBOLS.join(",") });
-      const quoteResults = await requestBrapi(`/api/market/quote?${quoteQuery}`);
+      const quoteResults = await requestBrapiForSymbols("/api/market/quote");
       quoteMissing = renderQuotes(quoteResults);
       lastQuoteUpdate = new Date();
       hasQuoteData = true;
@@ -366,11 +640,7 @@ export function initializeStocksTab() {
     if (includeHistory) {
       const range = chartRangeSelect.value;
       try {
-        const historyQuery = new URLSearchParams({
-          symbols: SYMBOLS.join(","),
-          range
-        });
-        const historyResults = await requestBrapi(`/api/market/historical?${historyQuery}`);
+        const historyResults = await requestBrapiForSymbols("/api/market/historical", { range });
         historyMissing = renderHistory(historyResults);
       } catch (error) {
         console.error("Falha ao carregar histórico de mercado:", error);
@@ -385,14 +655,17 @@ export function initializeStocksTab() {
   }
 
   async function loadHistoryOnly() {
+    const setupError = getApiSetupError();
+    if (setupError) {
+      setStatus(setupError, "error");
+      return;
+    }
     if (busy || !hasQuoteData || Date.now() < retryUntil) return;
     setBusy(true);
     try {
-      const historyQuery = new URLSearchParams({
-        symbols: SYMBOLS.join(","),
+      const historyResults = await requestBrapiForSymbols("/api/market/historical", {
         range: chartRangeSelect.value
       });
-      const historyResults = await requestBrapi(`/api/market/historical?${historyQuery}`);
       const missingSymbols = renderHistory(historyResults);
       renderStatus([], missingSymbols);
     } catch (error) {

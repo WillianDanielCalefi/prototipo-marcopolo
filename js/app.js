@@ -1,10 +1,12 @@
 import { buildAppData } from "./data.js";
 import { fmtNum, fmtBRL, fmtSignedBRL, fmtSignedNum } from "./formatters.js";
+import { initializeMillerOrr } from "./miller-orr.js";
 import { initializeStocksTab } from "./stocks.js";
 
 let DATA = [];
 
 initializeStocksTab();
+initializeMillerOrr();
 
 if (window.lucide) {
   window.lucide.createIcons({ attrs: { "stroke-width": 1.8 } });
@@ -170,12 +172,77 @@ function populateYearOptions() {
 }
 
 // Tabs
+const mobileNavToggle = document.getElementById("mobileNavToggle");
+const mobileNavBackdrop = document.getElementById("mobileNavBackdrop");
+const mobileNavClose = document.getElementById("mobileNavClose");
+const mobileNavCurrent = document.getElementById("mobileNavCurrent");
+const appTabs = document.getElementById("appTabs");
+
+function setMobileNavOpen(isOpen, restoreFocus = false) {
+  if (!mobileNavToggle || !mobileNavBackdrop || !appTabs) return;
+  if (!isOpen && mobileNavToggle.getAttribute("aria-expanded") !== "true") return;
+
+  mobileNavToggle.setAttribute("aria-expanded", String(isOpen));
+  appTabs.classList.toggle("is-open", isOpen);
+  mobileNavBackdrop.hidden = !isOpen;
+  document.body.classList.toggle("mobile-nav-open", isOpen);
+
+  if (isOpen) {
+    const activeTab = appTabs.querySelector(".tab-btn.active") || appTabs.querySelector(".tab-btn");
+    if (activeTab) activeTab.focus();
+  } else if (restoreFocus) {
+    mobileNavToggle.focus();
+  }
+}
+
+if (mobileNavToggle && mobileNavBackdrop && appTabs) {
+  mobileNavToggle.addEventListener("click", () => {
+    setMobileNavOpen(mobileNavToggle.getAttribute("aria-expanded") !== "true");
+  });
+  mobileNavBackdrop.addEventListener("click", () => setMobileNavOpen(false, true));
+  if (mobileNavClose) {
+    mobileNavClose.addEventListener("click", () => setMobileNavOpen(false, true));
+  }
+
+  document.addEventListener("keydown", event => {
+    if (mobileNavToggle.getAttribute("aria-expanded") !== "true") return;
+    if (event.key === "Escape") {
+      event.preventDefault();
+      setMobileNavOpen(false, true);
+      return;
+    }
+    if (event.key !== "Tab") return;
+
+    const focusableItems = appTabs.querySelectorAll("button:not(:disabled)");
+    const firstItem = focusableItems[0];
+    const lastItem = focusableItems[focusableItems.length - 1];
+    if (!firstItem || !lastItem) return;
+    if (event.shiftKey && document.activeElement === firstItem) {
+      event.preventDefault();
+      lastItem.focus();
+    } else if (!event.shiftKey && document.activeElement === lastItem) {
+      event.preventDefault();
+      firstItem.focus();
+    }
+  });
+
+  window.addEventListener("resize", () => {
+    if (window.innerWidth > 860) setMobileNavOpen(false);
+  });
+}
+
 document.querySelectorAll(".tab-btn").forEach(btn => {
   btn.addEventListener("click", () => {
-    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll(".tab-btn").forEach(b => {
+      b.classList.remove("active");
+      b.removeAttribute("aria-current");
+    });
     document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
     btn.classList.add("active");
+    btn.setAttribute("aria-current", "page");
     document.getElementById(btn.dataset.tab).classList.add("active");
+    if (mobileNavCurrent) mobileNavCurrent.textContent = btn.textContent.trim();
+    setMobileNavOpen(false, true);
   });
 });
 
